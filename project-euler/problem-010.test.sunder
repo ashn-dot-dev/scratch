@@ -1,0 +1,46 @@
+# The sum of the primes below 10 is 2 + 3 + 5 + 7 = 17.
+#
+# Find the sum of all the primes below two million.
+
+import "std";
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer {
+        allocator.fini();
+    }
+
+    var sieve = std::vector[[bool]]::init(std::allocator::init[[typeof(allocator)]](&allocator));
+    defer {
+        sieve.fini();
+    }
+    sieve.resize(2000000);
+    for i in sieve.count() {
+        sieve.data()[i] = true; # all default to "is prime"
+    }
+
+    sieve.data()[0] = false; # 0 is not prime
+    sieve.data()[1] = false; # 1 is not prime
+    for n in sieve.count() {
+        if not sieve.data()[n] {
+            continue;
+        }
+
+        var m = n + n; # multiples of n
+        for m < sieve.count() {
+            sieve.data()[m] = false;
+            m = m + n;
+        }
+    }
+
+    var sum = 0u;
+    for i in sieve.count() {
+        if not sieve.data()[i] {
+            continue;
+        }
+        sum = sum + i;
+    }
+    std::print_format_line(std::out(), "{}", (:[]std::formatter)[std::formatter::init[[usize]](&sum)]);
+}
+################################################################################
+# 142913828922

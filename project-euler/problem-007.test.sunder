@@ -1,0 +1,39 @@
+# By listing the first six prime numbers: 2, 3, 5, 7, 11, and 13, we can see
+# that the 6th prime is 13.
+#
+# What is the 10,001st prime number?
+
+import "std";
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer {
+        allocator.fini();
+    }
+
+    var primes = std::vector[[usize]]::init(std::allocator::init[[typeof(allocator)]](&allocator));
+    defer {
+        primes.fini();
+    }
+
+    var n = 2u;
+    primes.push(n);
+    for primes.count() != 10001 {
+        n = n + 1;
+        var n_is_prime = true;
+        for i in primes.count() {
+            if n % primes.data()[i] == 0 {
+                n_is_prime = false;
+                break;
+            }
+        }
+        if n_is_prime {
+            primes.push(n);
+        }
+    }
+
+    var back = primes.data()[primes.count()-1];
+    std::print_format_line(std::out(), "{}", (:[]std::formatter)[std::formatter::init[[usize]](&back)]);
+}
+################################################################################
+# 104743

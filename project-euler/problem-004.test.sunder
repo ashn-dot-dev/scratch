@@ -1,0 +1,41 @@
+# A palindromic number reads the same both ways. The largest palindrome made
+# from the product of two 2-digit numbers is 9009 = 91 × 99.
+#
+# Find the largest palindrome made from the product of two 3-digit numbers.
+
+import "std";
+
+func main() void {
+    var buf = (:[512]byte)[0...];
+    var allocator = std::linear_allocator::init(buf[0:countof(buf)]);
+
+    var largest = 0u;
+    for i in 100:1000 {
+        for j in 100:1000 {
+            var product = i * j;
+
+            var allocator = std::linear_allocator::init(buf[0:countof(buf)]);
+            var string = std::string::init(std::allocator::init[[typeof(allocator)]](&allocator));
+            defer {
+                string.fini();
+            }
+            std::print_format(std::writer::init[[std::string]](&string), "{}", (:[]std::formatter)[std::formatter::init[[usize]](&product)]);
+
+            var is_palindrome = true;
+            for k in (string.count() / 2) {
+                if string.data()[k] != string.data()[string.count() - 1 - k] {
+                    is_palindrome = false;
+                    break;
+                }
+            }
+
+            if is_palindrome and product > largest {
+                largest = product;
+            }
+        }
+    }
+
+    std::print_format_line(std::out(), "{}", (:[]std::formatter)[std::formatter::init[[usize]](&largest)]);
+}
+################################################################################
+# 906609
