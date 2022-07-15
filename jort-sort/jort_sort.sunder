@@ -1,4 +1,5 @@
 import "std";
+import "../bubble-sort/bubble_sort.sunder";
 
 func jort_sort[[T]](slice: []T, allocator: std::allocator) bool {
     # Sort the array.
@@ -7,7 +8,7 @@ func jort_sort[[T]](slice: []T, allocator: std::allocator) bool {
         std::slice[[T]]::delete(allocator, original);
     }
     std::slice[[T]]::copy(original, slice);
-    std::sort[[T]](slice);
+    bubble_sort[[T]](slice); # XXX
 
     # Compare to see if it was originally sorted.
     for i in countof(original) {

@@ -1,0 +1,45 @@
+import "std";
+import "bubble_sort.sunder";
+
+func display[[T]](slice: []T) void {
+    for i in countof(slice) {
+        if i != 0 {
+            std::print(std::out(), ", ");
+        }
+        std::print_format(std::out(), "{}", (:[]std::formatter)[std::formatter::init[[T]](&slice[i])]);
+    }
+    std::print(std::out(), "\n");
+}
+
+func test[[T]](slice: []T) void {
+    display[[T]](slice);
+    bubble_sort[[T]](slice);
+    display[[T]](slice);
+}
+
+func main() void {
+    test[[ssize]]((:[]ssize)[1, 2, 3]);
+    std::print(std::out(), "\n");
+    test[[ssize]]((:[]ssize)[3, 1, 2]);
+    std::print(std::out(), "\n");
+    test[[ssize]]((:[]ssize)[2, 3, 1]);
+    std::print(std::out(), "\n");
+    test[[ssize]]((:[]ssize)[3, 2, 1]);
+    std::print(std::out(), "\n");
+    test[[[]byte]]((:[][]byte)["carrot", "banana", "apple"]);
+}
+################################################################################
+# 1, 2, 3
+# 1, 2, 3
+#
+# 3, 1, 2
+# 1, 2, 3
+#
+# 2, 3, 1
+# 1, 2, 3
+#
+# 3, 2, 1
+# 1, 2, 3
+#
+# carrot, banana, apple
+# apple, banana, carrot
