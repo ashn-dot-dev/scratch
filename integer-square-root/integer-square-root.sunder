@@ -1,0 +1,26 @@
+import "std";
+
+# Returns the greatest integer less than or equal to the true square root of n.
+#
+# This implementation used the binary search algorithm from the integer square
+# root Wikipedia page[1] ported from C.
+#
+# [1]: https://en.wikipedia.org/wiki/Integer_square_root
+func isqrt[[T]](n: T) T {
+    std::assert(n >= 0);
+    var L: usize = 0;
+    var M: usize = 0;
+    var R: usize = n + 1;
+
+    for L != R - 1 {
+        M = (L + R) / 2;
+        if M * M <= n {
+            L = M;
+        }
+        else {
+            R = M;
+        }
+    }
+
+    return L;
+}

@@ -1,5 +1,5 @@
 import "std";
-import "../bubble-sort/bubble_sort.sunder";
+import "../bubble-sort/bubble-sort.sunder";
 
 func jort_sort[[T]](slice: []T, allocator: std::allocator) bool {
     # Sort the array.

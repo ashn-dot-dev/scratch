@@ -1,0 +1,13 @@
+import "std";
+import "integer-square-root.sunder";
+
+func main() void {
+    std::assert(isqrt[[usize]](0) == 0);
+    std::assert(isqrt[[usize]](1) == 1);
+    std::assert(isqrt[[usize]](2) == 1);
+    std::assert(isqrt[[usize]](3) == 1);
+    std::assert(isqrt[[usize]](4) == 2);
+    std::assert(isqrt[[usize]](5) == 2);
+    std::assert(isqrt[[usize]](100) == 10);
+    std::assert(isqrt[[usize]](101) == 10);
+}

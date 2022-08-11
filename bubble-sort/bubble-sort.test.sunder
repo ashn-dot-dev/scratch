@@ -1,5 +1,5 @@
 import "std";
-import "bubble_sort.sunder";
+import "bubble-sort.sunder";
 
 func display[[T]](slice: []T) void {
     for i in countof(slice) {

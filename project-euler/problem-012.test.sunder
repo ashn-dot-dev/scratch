@@ -20,31 +20,11 @@
 # What is the value of the first triangle number to have over five hundred
 # divisors?
 import "std";
-
-# Integer square root using binary search.
-# https://en.wikipedia.org/wiki/Integer_square_root
-func isqrt(n: usize) usize {
-    var L: usize = 0;
-    var M: usize = 0;
-    var R: usize = n + 1;
-
-    for L != R - 1
-    {
-        M = (L + R) / 2;
-        if M * M <= n {
-            L = M;
-        }
-        else {
-            R = M;
-        }
-    }
-
-    return L;
-}
+import "../integer-square-root/integer-square-root.sunder";
 
 func divisor_count(n: usize) usize {
     var count = 0u;
-    var sqrt = isqrt(n);
+    var sqrt = isqrt[[usize]](n);
 
     for i in 0:sqrt {
         var divisor = i + 1;
