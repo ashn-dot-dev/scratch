@@ -1,5 +1,5 @@
 import "std";
-import "jort_sort.sunder";
+import "jort-sort.sunder";
 
 func display[[T]](slice: []T) void {
     for i in countof(slice) {
