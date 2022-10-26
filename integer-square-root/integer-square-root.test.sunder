@@ -10,4 +10,13 @@ func main() void {
     std::assert(isqrt[[usize]](5) == 2);
     std::assert(isqrt[[usize]](100) == 10);
     std::assert(isqrt[[usize]](101) == 10);
+
+    std::assert(isqrt[[ssize]](0) == 0);
+    std::assert(isqrt[[ssize]](1) == 1);
+    std::assert(isqrt[[ssize]](2) == 1);
+    std::assert(isqrt[[ssize]](3) == 1);
+    std::assert(isqrt[[ssize]](4) == 2);
+    std::assert(isqrt[[ssize]](5) == 2);
+    std::assert(isqrt[[ssize]](100) == 10);
+    std::assert(isqrt[[ssize]](101) == 10);
 }
