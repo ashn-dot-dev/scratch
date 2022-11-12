@@ -214,21 +214,21 @@ func main() void {
     }
     var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
 
-    var sum = std::bigint::init(allocator);
+    var sum = std::big_integer::init(allocator);
     defer {
         sum.fini();
     }
 
     for i in countof(data) {
-        var result = std::bigint::init_from_str(allocator, data[i], 10);
+        var result = std::big_integer::init_from_str(allocator, data[i], 10);
         var tmp = result.value();
         defer {
             tmp.fini();
         }
-        std::bigint::add(&sum, &sum, &tmp);
+        std::big_integer::add(&sum, &sum, &tmp);
     }
 
-    var digits = std::string::init_from_format(allocator, "{}", (:[]std::formatter)[std::formatter::init[[std::bigint]](&sum)]);
+    var digits = std::string::init_from_format(allocator, "{}", (:[]std::formatter)[std::formatter::init[[std::big_integer]](&sum)]);
     defer {
         digits.fini();
     }
