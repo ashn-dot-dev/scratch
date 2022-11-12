@@ -1,0 +1,44 @@
+import "std";
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-01.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var result = std::read_all(std::reader::init[[typeof(file)]](&file), allocator);
+    var input = result.value();
+    defer std::slice[[byte]]::delete(allocator, input);
+
+    var floor = 0s;
+    var first_basement = std::optional[[usize]]::init_empty();
+    for i in countof(input) {
+        if input[i] == '(' {
+            floor = floor + 1;
+        }
+        if input[i] == ')' {
+            floor = floor - 1;
+        }
+
+        if first_basement.is_empty() and floor < 0 {
+            first_basement = std::optional[[usize]]::init_value(i + 1);
+        }
+    }
+
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[ssize]](&floor)]);
+
+    var first_basement = first_basement.value();
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&first_basement)]);
+}
+################################################################################
+# PART 1: 232
+# PART 2: 1783
