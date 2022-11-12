@@ -1,0 +1,68 @@
+import "std";
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-02.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+
+    var total_paper: std::umax = 0;
+    var total_ribbon: std::umax = 0;
+    for true {
+        var result = std::read_line(reader, allocator);
+        var optional = result.value();
+        if optional.is_empty() {
+            break;
+        }
+        var line = optional.value();
+        defer std::slice[[byte]]::delete(allocator, line);
+
+        var fields = std::str::split(line, "x", allocator);
+        defer std::slice[[[]byte]]::delete(allocator, fields);
+
+        std::assert(countof(fields) == 3);
+        var L = std::umax::init_from_str(fields[0], 10);
+        var L = L.value();
+        var W = std::umax::init_from_str(fields[1], 10);
+        var W = W.value();
+        var H = std::umax::init_from_str(fields[2], 10);
+        var H = H.value();
+
+        var LW = L * W;
+        var LH = L * H;
+        var WH = W * H;
+
+        var min_face = *std::min[[std::umax]](&LW, &LH);
+        var min_face = *std::min[[std::umax]](&min_face, &WH);
+
+        var area = 2 * LW + 2 * LH + 2 * WH + min_face;
+        total_paper = total_paper + area;
+
+        var min_side = *std::min[[std::umax]](&L, &W);
+        var min_side = *std::min[[std::umax]](&min_side, &H);
+        var max_side = *std::max[[std::umax]](&L, &W);
+        var max_side = *std::max[[std::umax]](&max_side, &H);
+        var mid_side = (L + W + H) - (min_side + max_side);
+
+        var ribbon = 2 * min_side + 2 * mid_side + L * W * H;
+        total_ribbon = total_ribbon + ribbon;
+    }
+
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[std::umax]](&total_paper)]);
+
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[std::umax]](&total_ribbon)]);
+}
+################################################################################
+# PART 1: 1588178
+# PART 2: 3783758
