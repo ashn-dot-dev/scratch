@@ -1,0 +1,69 @@
+import "std";
+
+const INPUT="1113222113";
+
+func encode(data: []byte, allocator: std::allocator) std::string {
+    var output = std::string::init(allocator);
+
+    var start = 0u;
+    for cur in countof(data) {
+        if data[cur] != data[start] {
+            var length = cur - start;
+            var digit = (:[]byte){&data[start], 1};
+            std::assert(length >= 1 and length < 10); # must be a single digit
+            std::print_format(
+                std::writer::init[[std::string]](&output),
+                "{d}{}",
+                (:[]std::formatter)[
+                    std::formatter::init[[usize]](&length),
+                    std::formatter::init[[[]byte]](&digit)]);
+            start = cur;
+        }
+    }
+
+    var length = countof(data) - start;
+    var digit = (:[]byte){&data[start], 1};
+    std::assert(length >= 1 and length < 10);
+    std::print_format(
+        std::writer::init[[std::string]](&output),
+        "{d}{}",
+        (:[]std::formatter)[
+            std::formatter::init[[usize]](&length),
+            std::formatter::init[[[]byte]](&digit)]);
+
+    return output;
+}
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    # All string data is freed by the general allocator at main exit.
+
+    var s = std::string::init_from_str(allocator, INPUT);
+    for i in 40 {
+        var tmp = encode(s.data(), allocator);
+        s.fini();
+        s = tmp;
+    }
+    var length = s.count();
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&length)]);
+
+    for i in 40:50 {
+        var tmp = encode(s.data(), allocator);
+        s.fini();
+        s = tmp;
+    }
+    var length = s.count();
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&length)]);
+}
+################################################################################
+# PART 1: 252594
+# PART 2: 3579328
