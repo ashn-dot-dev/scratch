@@ -1,0 +1,92 @@
+import "std";
+
+struct position {
+    var x: std::smax;
+    var y: std::smax;
+
+    func compare(lhs: *position, rhs: *position) ssize {
+        var cmp = std::compare[[std::smax]](&lhs.*.x, &rhs.*.x);
+        if cmp != 0 {
+            return cmp;
+        }
+        return std::compare[[std::smax]](&lhs.*.y, &rhs.*.y);
+    }
+
+    func hash(self: *position) usize {
+        return std::wrapping_add[[usize]](self.*.x.hash(), self.*.y.hash());
+    }
+}
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-03.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var result = std::read_all(std::reader::init[[typeof(file)]](&file), allocator);
+    var input = result.value();
+    defer std::slice[[byte]]::delete(allocator, input);
+
+    var map = std::hash_map[[position, void]]::init(allocator);
+    defer map.fini();
+
+    var pos = (:position){.x = 0, .y = 0};
+    map.insert(pos, void::init());
+
+    for i in countof(input) {
+        var char = input[i];
+        if not std::str::contains("^v<>", (:[]byte){&char, 1}) {
+            continue;
+        }
+
+        pos.x = pos.x - (:std::smax)(char == '^');
+        pos.x = pos.x + (:std::smax)(char == 'v');
+        pos.y = pos.y - (:std::smax)(char == '<');
+        pos.y = pos.y + (:std::smax)(char == '>');
+
+        map.insert(pos, void::init());
+    }
+
+    var houses_visited = map.count();
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&houses_visited)]);
+
+    var map = std::hash_map[[position, void]]::init(allocator);
+    defer map.fini();
+
+    var pos = (:[]position)[
+        (:position){.x = 0, .y = 0},
+        (:position){.x = 0, .y = 0}
+    ];
+    map.insert(pos[0], void::init()); # Same for Santa and Robo-Santa
+
+    var cur = 0u; # 0 => Santa, 1 => Robo-Santa
+    for i in countof(input) {
+        var char = input[i];
+        if not std::str::contains("^v<>", (:[]byte){&char, 1}) {
+            continue;
+        }
+
+        pos[cur].x = pos[cur].x - (:std::smax)(char == '^');
+        pos[cur].x = pos[cur].x + (:std::smax)(char == 'v');
+        pos[cur].y = pos[cur].y - (:std::smax)(char == '<');
+        pos[cur].y = pos[cur].y + (:std::smax)(char == '>');
+
+        map.insert(pos[cur], void::init());
+        cur = (cur + 1) % 2;
+    }
+
+    var houses_visited = map.count();
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&houses_visited)]);
+}
+################################################################################
+# PART 1: 2592
+# PART 2: 2360
