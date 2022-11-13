@@ -1,7 +1,7 @@
 import hashlib
 import itertools
 
-INPUT="bgvyzdsv"
+INPUT = "bgvyzdsv"
 
 def md5_that_starts_with_zeros(zeros):
     for n in itertools.count(start=0):

@@ -1,6 +1,6 @@
 import "std";
 
-const INPUT="1113222113";
+const INPUT = "1113222113";
 
 func encode(data: []byte, allocator: std::allocator) std::vector[[byte]] {
     var output = std::vector[[byte]]::init(allocator);
