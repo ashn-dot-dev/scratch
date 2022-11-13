@@ -1,0 +1,93 @@
+import "std";
+
+func nice1(str: []byte) bool {
+    var vowels = 0u;
+    var double = false;
+    for i in countof(str) {
+        vowels = vowels + (:usize)std::str::contains("aeiou", (:[]byte){&str[i], 1});
+        if i != 0 and str[i] == str[i - 1] {
+            double = true;
+        }
+    }
+    return vowels >= 3 and double and
+        not std::str::contains(str, "ab") and
+        not std::str::contains(str, "cd") and
+        not std::str::contains(str, "pq") and
+        not std::str::contains(str, "xy");
+}
+
+func nice2(str: []byte, allocator: std::allocator) bool {
+    var repeats = false;
+    for i in countof(str) - 2 {
+        if str[i] == str[i + 2] {
+            repeats = true;
+        }
+    }
+
+    var double_pair = false;
+    # Map from pair strings to the first index where that string occured.
+    var pairs = std::hash_map[[[]byte, usize]]::init(allocator);
+    defer pairs.fini();
+    for i in countof(str) - 1 {
+        var pair = str[i : i + 2];
+        var optional = pairs.lookup(pair);
+        if optional.is_value() {
+            # aaaa
+            # ^ ^
+            # | +- first index + 2 (no overlap between first and second "aa")
+            # +- first index
+            if i >= optional.value() + 2 {
+                double_pair = true;
+            }
+        }
+        else {
+            pairs.insert(pair, i);
+        }
+    }
+
+    return repeats and double_pair;
+}
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-05.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+
+    var nice1_count = 0u;
+    var nice2_count = 0u;
+    for true {
+        var result = std::read_line(reader, allocator);
+        var optional = result.value();
+        if optional.is_empty() {
+            break;
+        }
+        var line = optional.value();
+        defer std::slice[[byte]]::delete(allocator, line);
+
+        if nice1(line) {
+            nice1_count = nice1_count + 1;
+        }
+        if nice2(line, allocator) {
+            nice2_count = nice2_count + 1;
+        }
+    }
+
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&nice1_count)]);
+
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&nice2_count)]);
+}
+################################################################################
+# PART 1: 255
+# PART 2: 55
