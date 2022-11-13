@@ -2,34 +2,23 @@ import "std";
 
 const INPUT="1113222113";
 
-func encode(data: []byte, allocator: std::allocator) std::string {
-    var output = std::string::init(allocator);
+func encode(data: []byte, allocator: std::allocator) std::vector[[byte]] {
+    var output = std::vector[[byte]]::init(allocator);
 
     var start = 0u;
     for cur in countof(data) {
         if data[cur] != data[start] {
             var length = cur - start;
-            var digit = (:[]byte){&data[start], 1};
-            std::assert(length >= 1 and length < 10); # must be a single digit
-            std::print_format(
-                std::writer::init[[std::string]](&output),
-                "{d}{}",
-                (:[]std::formatter)[
-                    std::formatter::init[[usize]](&length),
-                    std::formatter::init[[[]byte]](&digit)]);
+            output.push((:byte)('0' + (:u8)length));
+            output.push(data[start]);
             start = cur;
         }
     }
 
     var length = countof(data) - start;
-    var digit = (:[]byte){&data[start], 1};
     std::assert(length >= 1 and length < 10);
-    std::print_format(
-        std::writer::init[[std::string]](&output),
-        "{d}{}",
-        (:[]std::formatter)[
-            std::formatter::init[[usize]](&length),
-            std::formatter::init[[[]byte]](&digit)]);
+    output.push((:byte)('0' + (:u8)length));
+    output.push(data[start]);
 
     return output;
 }
@@ -41,7 +30,11 @@ func main() void {
 
     # All string data is freed by the general allocator at main exit.
 
-    var s = std::string::init_from_str(allocator, INPUT);
+    var s = std::vector[[byte]]::init(allocator);
+    for i in countof(INPUT) {
+        s.push(INPUT[i]);
+    }
+
     for i in 40 {
         var tmp = encode(s.data(), allocator);
         s.fini();
