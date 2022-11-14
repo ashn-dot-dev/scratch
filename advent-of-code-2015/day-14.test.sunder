@@ -1,0 +1,120 @@
+import "std";
+
+const SECONDS = 2503u;
+
+struct reindeer {
+    var name: []byte;
+    var fly_speed: usize; # km / s
+    var fly_time: usize; # s
+    var rest_time: usize; # s
+
+    const STATE_FLYING: usize = 0;
+    const STATE_RESTING: usize = 1;
+    var state: usize; # The current state.
+    var timer: usize; # Time in the current state.
+    var distance: usize; # km
+
+    func init(allocator: std::allocator, line: []byte) reindeer {
+        var fields = std::str::split(line, " ", allocator);
+        defer std::slice[[[]byte]]::delete(allocator, fields);
+
+        var name = fields[0];
+        var result = usize::init_from_str(fields[3], 10);
+        var fly_speed = result.value();
+        var result = usize::init_from_str(fields[6], 10);
+        var fly_time = result.value();
+        var result = usize::init_from_str(fields[13], 10);
+        var rest_time = result.value();
+
+        return (:reindeer){
+            .name = name,
+            .fly_speed = fly_speed,
+            .fly_time = fly_time,
+            .rest_time = rest_time,
+            .state = reindeer::STATE_FLYING,
+            .timer = fly_time,
+            .distance = 0
+        };
+    }
+
+    # Advance by one second.
+    func tick(self: *reindeer) void {
+        std::assert(self.*.timer != 0);
+        self.*.timer = self.*.timer - 1;
+
+        if self.*.state == reindeer::STATE_FLYING {
+            self.*.distance = self.*.distance + self.*.fly_speed;
+        }
+
+        if self.*.timer == 0 and self.*.state == reindeer::STATE_FLYING {
+            self.*.state = reindeer::STATE_RESTING;
+            self.*.timer = self.*.rest_time;
+        }
+        if self.*.timer == 0 and self.*.state == reindeer::STATE_RESTING {
+            self.*.state = reindeer::STATE_FLYING;
+            self.*.timer = self.*.fly_time;
+        }
+    }
+}
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-14.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var result = std::read_all(std::reader::init[[typeof(file)]](&file), allocator);
+    var input = result.value();
+    defer std::slice[[byte]]::delete(allocator, input);
+
+    var lines = std::str::split(std::ascii::view_trimmed(input), "\n", allocator);
+    defer std::slice[[[]byte]]::delete(allocator, lines);
+
+    var reindeers = std::slice[[reindeer]]::new(allocator, countof(lines));
+    defer std::slice[[reindeer]]::delete(allocator, reindeers);
+    for i in countof(reindeers) {
+        reindeers[i] = reindeer::init(allocator, lines[i]);
+    }
+    var points = std::slice[[usize]]::new(allocator, countof(reindeers));
+    std::slice[[usize]]::fill(points, 0);
+    defer std::slice[[usize]]::delete(allocator, points);
+
+    var furthest_distance = 0u;
+    for t in 1:(SECONDS + 1) {
+        for i in countof(reindeers) {
+            reindeers[i].tick();
+        }
+
+        # Find the furthest distance this tick.
+        for i in countof(reindeers) {
+            furthest_distance = *std::max[[usize]](&furthest_distance, &reindeers[i].distance);
+        }
+
+        # Award points to the reindeer(s) with the furthest distance.
+        for i in countof(reindeers) {
+            if reindeers[i].distance == furthest_distance {
+                points[i] = points[i] + 1;
+            }
+        }
+    }
+
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&furthest_distance)]);
+
+    var most_points = 0u;
+    for i in countof(points) {
+        most_points = *std::max[[usize]](&most_points, &points[i]);
+    }
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&most_points)]);
+}
+################################################################################
+# PART 1: 2696
+# PART 2: 1084
