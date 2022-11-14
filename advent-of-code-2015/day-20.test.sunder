@@ -1,0 +1,77 @@
+import "std";
+import "../integer-square-root/integer-square-root.sunder";
+
+const INPUT = 29000000u;
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    # Large enough to fit the part 1 and part 2 answers.
+    const MAX_HOUSE_COUNT = 1000000u;
+    # How many house can the Nth part 2 elf still visit.
+    var houses = std::slice[[usize]]::new(allocator, MAX_HOUSE_COUNT);
+    defer std::slice[[usize]]::delete(allocator, houses);
+    # Each part 2 elf may visit up to 50 houses.
+    std::slice[[usize]]::fill(houses, 50);
+
+    var part1_answer = std::optional[[usize]]::init_empty();
+    var part2_answer = std::optional[[usize]]::init_empty();
+
+    var house = 1u;
+    for part1_answer.is_empty() or part2_answer.is_empty() {
+        defer { house = house + 1; }
+
+        var part1_presents = 0u;
+        var part2_presents = 0u;
+
+        # Maximum divisior we need to check, excluding the house itself.
+        var sqrt = isqrt[[usize]](house);
+        for i in 1:(sqrt + 1) {
+            if house % i != 0 {
+                continue;
+            }
+
+            var elf_a = house / i;
+            var elf_b = house % i;
+            var is_perfect_square = elf_a == elf_b;
+
+            part1_presents = part1_presents + 10 * elf_a;
+            if not is_perfect_square {
+                part1_presents = part1_presents + 10 * elf_b;
+            }
+
+            if houses[elf_a] != 0 {
+                part2_presents = part2_presents + 11 * elf_a;
+                houses[elf_a] = houses[elf_a] - 1;
+            }
+            if houses[elf_b] != 0 and not is_perfect_square {
+                part2_presents = part2_presents + 11 * elf_b;
+                houses[elf_b] = houses[elf_b] - 1;
+            }
+        }
+
+        if part1_answer.is_empty() and part1_presents > INPUT {
+            part1_answer = std::optional[[usize]]::init_value(house);
+        }
+        if part2_answer.is_empty() and part2_presents > INPUT {
+            part2_answer = std::optional[[usize]]::init_value(house);
+        }
+    }
+
+    var part1_answer = part1_answer.value();
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&part1_answer)]);
+
+    var part2_answer = part2_answer.value();
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&part2_answer)]);
+}
+################################################################################
+# PART 1: 665280
+# PART 2: 705600

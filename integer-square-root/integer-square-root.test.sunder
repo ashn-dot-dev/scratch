@@ -8,6 +8,11 @@ func main() void {
     std::assert(isqrt[[usize]](3) == 1);
     std::assert(isqrt[[usize]](4) == 2);
     std::assert(isqrt[[usize]](5) == 2);
+    std::assert(isqrt[[usize]](6) == 2);
+    std::assert(isqrt[[usize]](7) == 2);
+    std::assert(isqrt[[usize]](8) == 2);
+    std::assert(isqrt[[usize]](9) == 3);
+    std::assert(isqrt[[usize]](10) == 3);
     std::assert(isqrt[[usize]](100) == 10);
     std::assert(isqrt[[usize]](101) == 10);
 
@@ -17,6 +22,11 @@ func main() void {
     std::assert(isqrt[[ssize]](3) == 1);
     std::assert(isqrt[[ssize]](4) == 2);
     std::assert(isqrt[[ssize]](5) == 2);
+    std::assert(isqrt[[usize]](6) == 2);
+    std::assert(isqrt[[usize]](7) == 2);
+    std::assert(isqrt[[usize]](8) == 2);
+    std::assert(isqrt[[usize]](9) == 3);
+    std::assert(isqrt[[usize]](10) == 3);
     std::assert(isqrt[[ssize]](100) == 10);
     std::assert(isqrt[[ssize]](101) == 10);
 }
