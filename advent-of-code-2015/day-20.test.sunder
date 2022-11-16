@@ -16,8 +16,8 @@ func main() void {
     # Each part 2 elf may visit up to 50 houses.
     std::slice[[usize]]::fill(houses, 50);
 
-    var part1_answer = std::optional[[usize]]::init_empty();
-    var part2_answer = std::optional[[usize]]::init_empty();
+    var part1_answer = std::optional[[usize]]::EMPTY;
+    var part2_answer = std::optional[[usize]]::EMPTY;
 
     var house = 1u;
     for part1_answer.is_empty() or part2_answer.is_empty() {

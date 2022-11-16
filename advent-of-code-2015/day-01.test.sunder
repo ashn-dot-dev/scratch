@@ -14,7 +14,7 @@ func main() void {
     defer std::slice[[byte]]::delete(allocator, input);
 
     var floor = 0s;
-    var first_basement = std::optional[[usize]]::init_empty();
+    var first_basement = std::optional[[usize]]::EMPTY;
     for i in countof(input) {
         if input[i] == '(' {
             floor = floor + 1;
