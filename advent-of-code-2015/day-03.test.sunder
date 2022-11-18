@@ -34,7 +34,7 @@ func main() void {
     defer map.fini();
 
     var pos = (:position){.x = 0, .y = 0};
-    map.insert(pos, void::init());
+    map.insert(pos, void::VALUE);
 
     for i in countof(input) {
         var char = input[i];
@@ -47,7 +47,7 @@ func main() void {
         pos.y = pos.y - (:std::smax)(char == '<');
         pos.y = pos.y + (:std::smax)(char == '>');
 
-        map.insert(pos, void::init());
+        map.insert(pos, void::VALUE);
     }
 
     var houses_visited = map.count();
@@ -63,7 +63,7 @@ func main() void {
         (:position){.x = 0, .y = 0},
         (:position){.x = 0, .y = 0}
     ];
-    map.insert(pos[0], void::init()); # Same for Santa and Robo-Santa
+    map.insert(pos[0], void::VALUE); # Same for Santa and Robo-Santa
 
     var cur = 0u; # 0 => Santa, 1 => Robo-Santa
     for i in countof(input) {
@@ -77,7 +77,7 @@ func main() void {
         pos[cur].y = pos[cur].y - (:std::smax)(char == '<');
         pos[cur].y = pos[cur].y + (:std::smax)(char == '>');
 
-        map.insert(pos[cur], void::init());
+        map.insert(pos[cur], void::VALUE);
         cur = (cur + 1) % 2;
     }
 
