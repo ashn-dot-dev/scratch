@@ -13,7 +13,7 @@ struct position {
     }
 
     func hash(self: *position) usize {
-        return std::wrapping_add[[usize]](self.*.x.hash(), self.*.y.hash());
+        return self.*.x.hash() +% self.*.y.hash();
     }
 }
 
