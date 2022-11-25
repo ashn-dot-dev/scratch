@@ -23,6 +23,7 @@ func main() void {
         defer std::slice[[byte]]::delete(allocator, line);
 
         # CODE FOR EACH LINE GOES HERE
+        line;
     }
 
     std::print_format_line(

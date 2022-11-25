@@ -21,7 +21,7 @@ struct big_decimal {
 
     func init_from_int[[T]](allocator: std::allocator, scale: usize, int: T) big_decimal {
         var unscaled = std::big_integer::init_from_int[[T]](allocator, int);
-        for i in scale {
+        for _ in scale {
             std::big_integer::mul(&unscaled, &unscaled, &std::big_integer::POSITIVE_TEN);
         }
 
@@ -67,7 +67,7 @@ struct big_decimal {
 
         var unscaled = std::big_integer::init_from_big_integer(allocator, &integer_part);
         var scale = countof(str[decimal.value()+1:countof(str)]);
-        for i in scale {
+        for _ in scale {
             std::big_integer::mul(&unscaled, &unscaled, &std::big_integer::POSITIVE_TEN);
         }
 

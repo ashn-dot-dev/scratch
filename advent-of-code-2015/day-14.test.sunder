@@ -83,7 +83,7 @@ func main() void {
     defer std::slice[[usize]]::delete(allocator, points);
 
     var furthest_distance = 0u;
-    for t in 1:(SECONDS + 1) {
+    for _ in 1:(SECONDS + 1) {
         for i in countof(reindeers) {
             reindeers[i].tick();
         }

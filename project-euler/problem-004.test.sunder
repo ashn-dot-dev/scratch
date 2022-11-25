@@ -7,7 +7,6 @@ import "std";
 
 func main() void {
     var buf = (:[512]byte)[0...];
-    var allocator = std::linear_allocator::init(buf[0:countof(buf)]);
 
     var largest = 0u;
     for i in 100:1000 {

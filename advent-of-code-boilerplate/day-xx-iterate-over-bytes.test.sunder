@@ -19,6 +19,7 @@ func main() void {
         var char = input[i];
 
         # CODE FOR EACH BYTE GOES HERE
+        char;
     }
 
     std::print_format_line(

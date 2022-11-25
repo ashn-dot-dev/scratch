@@ -35,7 +35,7 @@ func main() void {
         s.push(INPUT[i]);
     }
 
-    for i in 40 {
+    for _ in 40 {
         var tmp = encode(s.data(), allocator);
         s.fini();
         s = tmp;
@@ -46,7 +46,7 @@ func main() void {
         "PART 1: {}",
         (:[]std::formatter)[std::formatter::init[[usize]](&length)]);
 
-    for i in 40:50 {
+    for _ in 40:50 {
         var tmp = encode(s.data(), allocator);
         s.fini();
         s = tmp;

@@ -12,8 +12,6 @@ func main() void {
     const TARGET = 1000u;
     for a in 1:usize::MAX {
         for b in 1:(TARGET - a + 1) {
-            var a_squared = a * a;
-            var b_squared = b * b;
             var c_squared = a * a + b * b; # theoretical if Pythagorean triple
 
             var c = TARGET - (a + b); # candidate c
