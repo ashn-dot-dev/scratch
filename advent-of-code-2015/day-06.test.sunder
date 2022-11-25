@@ -1,0 +1,139 @@
+import "std";
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-06.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+
+    var part1_grid = std::slice[[[]bool]]::new(allocator, 1000);
+    for i in countof(part1_grid) {
+        part1_grid[i] = std::slice[[bool]]::new(allocator, 1000);
+        std::slice[[bool]]::fill(part1_grid[i], false);
+    }
+
+    var part2_grid = std::slice[[[]ssize]]::new(allocator, 1000);
+    for i in countof(part1_grid) {
+        part2_grid[i] = std::slice[[ssize]]::new(allocator, 1000);
+        std::slice[[ssize]]::fill(part2_grid[i], 0);
+    }
+
+    for true {
+        var result = std::read_line(reader, allocator);
+        var optional = result.value();
+        if optional.is_empty() {
+            break;
+        }
+        var line = optional.value();
+        defer std::slice[[byte]]::delete(allocator, line);
+
+        var fields = std::str::split(line, " ", allocator);
+        defer std::slice[[[]byte]]::delete(allocator, fields);
+
+        if std::str::starts_with(line, "turn on") or std::str::starts_with(line, "turn off") {
+            var a = fields[2];
+            var a_fields = std::str::split(a, ",", allocator);
+            defer std::slice[[[]byte]]::delete(allocator, a_fields);
+            var result = usize::init_from_str(a_fields[0], 10);
+            var a_x = result.value();
+            var result = usize::init_from_str(a_fields[1], 10);
+            var a_y = result.value();
+
+            var b = fields[4];
+            var b_fields = std::str::split(b, ",", allocator);
+            defer std::slice[[[]byte]]::delete(allocator, b_fields);
+            var result = usize::init_from_str(b_fields[0], 10);
+            var b_x = result.value();
+            var result = usize::init_from_str(b_fields[1], 10);
+            var b_y = result.value();
+
+            var state = std::str::starts_with(line, "turn on");
+            for x in a_x:(b_x + 1) {
+                for y in a_y:(b_y + 1) {
+                    part1_grid[x][y] = state;
+                }
+            }
+
+            var diff: ssize = uninit;
+            if std::str::starts_with(line, "turn on") {
+                diff = +1;
+            }
+            else {
+                diff = -1;
+            }
+            for x in a_x:(b_x + 1) {
+                for y in a_y:(b_y + 1) {
+                    part2_grid[x][y] = part2_grid[x][y] + diff;
+                    if part2_grid[x][y] < 0 {
+                        part2_grid[x][y] = 0;
+                    }
+                }
+            }
+            continue;
+        }
+        if std::str::starts_with(line, "toggle") {
+            var a = fields[1];
+            var a_fields = std::str::split(a, ",", allocator);
+            defer std::slice[[[]byte]]::delete(allocator, a_fields);
+            var result = usize::init_from_str(a_fields[0], 10);
+            var a_x = result.value();
+            var result = usize::init_from_str(a_fields[1], 10);
+            var a_y = result.value();
+
+            var b = fields[3];
+            var b_fields = std::str::split(b, ",", allocator);
+            defer std::slice[[[]byte]]::delete(allocator, b_fields);
+            var result = usize::init_from_str(b_fields[0], 10);
+            var b_x = result.value();
+            var result = usize::init_from_str(b_fields[1], 10);
+            var b_y = result.value();
+
+            for x in a_x:(b_x + 1) {
+                for y in a_y:(b_y + 1) {
+                    part1_grid[x][y] = not part1_grid[x][y];
+                }
+            }
+
+            for x in a_x:(b_x + 1) {
+                for y in a_y:(b_y + 1) {
+                    part2_grid[x][y] = part2_grid[x][y] + 2;
+                }
+            }
+            continue;
+        }
+
+        std::assert(false); # unreachable
+    }
+
+    var part1_answer = 0u;
+    for x in countof(part1_grid) {
+        for y in countof(part1_grid[x]) {
+            part1_answer = part1_answer + (:usize)part1_grid[x][y];
+        }
+    }
+
+    var part2_answer = 0s;
+    for x in countof(part2_grid) {
+        for y in countof(part2_grid[x]) {
+            part2_answer = part2_answer + (:ssize)part2_grid[x][y];
+        }
+    }
+
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
+
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part2_answer)]](&part2_answer)]);
+}
+################################################################################
+# PART 1: 569999
+# PART 2: 17836115
