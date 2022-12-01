@@ -1,0 +1,53 @@
+import "std";
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-01.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+
+    var elves = std::vector[[usize]]::init(allocator);
+    var cur: usize = 0;
+    for true {
+        var result = std::read_line(reader, allocator);
+        var optional = result.value();
+        if optional.is_empty() {
+            elves.push(cur);
+            break;
+        }
+
+        var line = optional.value();
+        defer std::slice[[byte]]::delete(allocator, line);
+        if countof(line) == 0 {
+            elves.push(cur);
+            cur = 0;
+            continue;
+        }
+
+        var result = usize::init_from_str(line, 10);
+        cur = cur + result.value();
+    }
+
+    std::quick_sort[[usize]](elves.data());
+    std::slice[[usize]]::reverse(elves.data());
+
+    var part1_answer = elves.data()[0];
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
+
+    var part2_answer = elves.data()[0] + elves.data()[1] + elves.data()[2];
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part2_answer)]](&part2_answer)]);
+}
+################################################################################
+# PART 1: 68787
+# PART 2: 198041
