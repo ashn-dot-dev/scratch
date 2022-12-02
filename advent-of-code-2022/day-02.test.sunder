@@ -1,0 +1,111 @@
+import "std";
+
+# Normalized choices:
+#   0 => rock
+#   1 => paper
+#   2 => scissors
+const ROCK = 0u;
+const PAPER = 1u;
+const SCISSORS = 2u;
+
+func run_round(opnt_choice_normalized: usize, your_choice_normalized: usize) usize {
+    std::assert(opnt_choice_normalized < 3);
+    std::assert(your_choice_normalized < 3);
+
+    var choice_score = your_choice_normalized + 1;
+
+    if your_choice_normalized == opnt_choice_normalized {
+        return choice_score + 3; # draw
+    }
+
+    if your_choice_normalized == ROCK     and opnt_choice_normalized == SCISSORS
+    or your_choice_normalized == PAPER    and opnt_choice_normalized == ROCK
+    or your_choice_normalized == SCISSORS and opnt_choice_normalized == PAPER {
+        return choice_score + 6; # win
+    }
+
+    return choice_score; # loss
+}
+
+func run_round_part1(opnt_choice: byte, your_choice: byte) usize {
+    std::assert('A' <= opnt_choice and opnt_choice <= 'C');
+    std::assert('X' <= your_choice and your_choice <= 'Z');
+    var opnt_choice_normalized = (:usize)opnt_choice - 'A';
+    var your_choice_normalized = (:usize)your_choice - 'X';
+    return run_round(opnt_choice_normalized, your_choice_normalized);
+}
+
+func run_round_part2(opnt_choice: byte, outcome: byte) usize {
+    std::assert('A' <= opnt_choice and opnt_choice <= 'C');
+    std::assert('X' <= outcome and outcome <= 'Z');
+    var opnt_choice_normalized = (:usize)opnt_choice - 'A';
+
+    const LOSE: byte = 'X';
+    const DRAW: byte = 'Y';
+    const WIN: byte = 'Z';
+
+    if outcome == LOSE and opnt_choice_normalized == ROCK {
+        return run_round(opnt_choice_normalized, SCISSORS);
+    }
+    if outcome == LOSE and opnt_choice_normalized == PAPER {
+        return run_round(opnt_choice_normalized, ROCK);
+    }
+    if outcome == LOSE and opnt_choice_normalized == SCISSORS {
+        return run_round(opnt_choice_normalized, PAPER);
+    }
+
+    if outcome == WIN and opnt_choice_normalized == ROCK {
+        return run_round(opnt_choice_normalized, PAPER);
+    }
+    if outcome == WIN and opnt_choice_normalized == PAPER {
+        return run_round(opnt_choice_normalized, SCISSORS);
+    }
+    if outcome == WIN and opnt_choice_normalized == SCISSORS {
+        return run_round(opnt_choice_normalized, ROCK);
+    }
+
+    std::assert(outcome == DRAW);
+    return run_round(opnt_choice_normalized, opnt_choice_normalized);
+}
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-02.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+
+    var part1_total_score = 0u;
+    var part2_total_score = 0u;
+    for true {
+        var result = std::read_line(reader, allocator);
+        var optional = result.value();
+        if optional.is_empty() {
+            break;
+        }
+
+        var line = optional.value();
+        defer std::slice[[byte]]::delete(allocator, line);
+
+        std::assert(countof(line) != 0);
+        part1_total_score = part1_total_score + run_round_part1(line[0], line[2]);
+        part2_total_score = part2_total_score + run_round_part2(line[0], line[2]);
+    }
+
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&part1_total_score)]);
+
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&part2_total_score)]);
+}
+################################################################################
+# PART 1: 13268
+# PART 2: 15508
