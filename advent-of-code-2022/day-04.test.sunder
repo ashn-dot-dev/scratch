@@ -1,0 +1,76 @@
+import "std";
+
+struct assignment {
+    var lo: usize;
+    var hi: usize;
+
+    func init_from_str(str: []byte) assignment {
+        var buf = (:[64]byte)[0...];
+        var allocator = std::linear_allocator::init(buf[0:countof(buf)]);
+        var allocator = std::allocator::init[[std::linear_allocator]](&allocator);
+        var sections = std::str::split(str, "-", allocator);
+        std::assert(countof(sections) == 2);
+
+        var lo = usize::init_from_str(sections[0], 10);
+        var hi = usize::init_from_str(sections[1], 10);
+        return (:assignment){.lo = lo.value(), .hi = hi.value()};
+    }
+}
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-04.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+
+    var part1_answer = 0u;
+    var part2_answer = 0u;
+    for true {
+        var result = std::read_line(reader, allocator);
+        var optional = result.value();
+        if optional.is_empty() {
+            break;
+        }
+        var line = optional.value();
+        defer std::slice[[byte]]::delete(allocator, line);
+
+        var assignments = std::str::split(line, ",", allocator);
+        defer std::slice[[[]byte]]::delete(allocator, assignments);
+
+        std::assert(countof(assignments) == 2);
+        var elf_a = assignment::init_from_str(assignments[0]);
+        var elf_b = assignment::init_from_str(assignments[1]);
+
+        var a_contains_b = elf_a.lo <= elf_b.lo and elf_a.hi >= elf_b.hi;
+        var b_contains_a = elf_b.lo <= elf_a.lo and elf_b.hi >= elf_a.hi;
+        if a_contains_b or b_contains_a {
+            part1_answer = part1_answer + 1;
+        }
+
+        if elf_a.hi < elf_b.lo {
+            continue;
+        }
+        if elf_a.lo > elf_b.hi {
+            continue;
+        }
+        part2_answer = part2_answer + 1;
+    }
+
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
+
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part2_answer)]](&part2_answer)]);
+}
+################################################################################
+# PART 1: 459
+# PART 2: 
