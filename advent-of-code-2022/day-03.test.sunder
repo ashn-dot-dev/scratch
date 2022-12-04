@@ -1,0 +1,101 @@
+import "std";
+
+func priority(char: byte) usize {
+    if std::ascii::is_uppercase(char) {
+        return ((:usize)char - 'A') + 27;
+    }
+
+    if std::ascii::is_lowercase(char) {
+        return ((:usize)char - 'a') + 1;
+    }
+
+    std::assert(false); # unreachable
+    return std::zeroed[[usize]]();
+}
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-03.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+
+    var part1_answer = 0u;
+    var part2_answer = 0u;
+    var group = std::vector[[std::hash_map[[byte, void]]]]::init(allocator);
+    defer group.fini();
+    for true {
+        var result = std::read_line(reader, allocator);
+        var optional = result.value();
+        if optional.is_empty() {
+            break;
+        }
+
+        var line = optional.value();
+        defer std::slice[[byte]]::delete(allocator, line);
+
+        # PART 1
+        std::assert(countof(line) % 2 == 0);
+        var count = countof(line);
+        var compartment1 = line[0:count/2];
+        var compartment2 = line[count/2:count];
+        var shared = std::optional[[byte]]::EMPTY;
+        for i in countof(compartment1) {
+            var item = compartment1[i];
+            for j in countof(compartment2) {
+                if compartment2[j] == item {
+                    shared = std::optional[[byte]]::init_value(item);
+                }
+            }
+        }
+        part1_answer = part1_answer + priority(shared.value());
+
+        # PART 2
+        var items = std::hash_map[[byte, void]]::init(allocator);
+        for i in countof(line) {
+            items.insert(line[i], void::VALUE);
+        }
+        group.push(items);
+        if group.count() % 3 != 0 {
+            continue;
+        }
+
+        defer {
+            group.data()[0].fini();
+            group.data()[1].fini();
+            group.data()[2].fini();
+            group.resize(0);
+        }
+        var shared = std::optional[[byte]]::EMPTY;
+        for i in 'A':'Z' + 1{
+            var c = (:byte)i;
+            if group.data()[0].contains(c) and group.data()[1].contains(c) and group.data()[2].contains(c) {
+                shared = std::optional[[byte]]::init_value(c);
+            }
+        }
+        for i in 'a':'z' + 1 {
+            var c = (:byte)i;
+            if group.data()[0].contains(c) and group.data()[1].contains(c) and group.data()[2].contains(c) {
+                shared = std::optional[[byte]]::init_value(c);
+            }
+        }
+        part2_answer = part2_answer + priority(shared.value());
+    }
+
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&part1_answer)]);
+
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&part2_answer)]);
+}
+################################################################################
+# PART 1: 7766
+# PART 2: 2415
