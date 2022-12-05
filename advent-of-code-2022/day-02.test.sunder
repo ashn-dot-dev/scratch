@@ -1,44 +1,46 @@
 import "std";
 
-# Normalized choices:
-#   0 => rock
-#   1 => paper
-#   2 => scissors
-const ROCK = 0u;
-const PAPER = 1u;
-const SCISSORS = 2u;
+# Normalized choices (worth their individual point values).
+const ROCK     = 1u;
+const PAPER    = 2u;
+const SCISSORS = 3u;
+
+func normalize(choice: byte) usize {
+    if 'A' <= choice and choice <= 'C' {
+        return (:usize)choice - 'A' + 1;
+    }
+
+    if 'X' <= choice and choice <= 'Z' {
+        return (:usize)choice - 'X' + 1;
+    }
+
+    std::assert(false); # unreachable
+    return 0;
+}
 
 func run_round(opnt_choice_normalized: usize, your_choice_normalized: usize) usize {
-    std::assert(opnt_choice_normalized < 3);
-    std::assert(your_choice_normalized < 3);
-
-    var choice_score = your_choice_normalized + 1;
+    std::assert(ROCK <= opnt_choice_normalized and opnt_choice_normalized <= SCISSORS);
+    std::assert(ROCK <= your_choice_normalized and your_choice_normalized <= SCISSORS);
 
     if your_choice_normalized == opnt_choice_normalized {
-        return choice_score + 3; # draw
+        return your_choice_normalized + 3; # draw
     }
 
     if your_choice_normalized == ROCK     and opnt_choice_normalized == SCISSORS
     or your_choice_normalized == PAPER    and opnt_choice_normalized == ROCK
     or your_choice_normalized == SCISSORS and opnt_choice_normalized == PAPER {
-        return choice_score + 6; # win
+        return your_choice_normalized + 6; # win
     }
 
-    return choice_score; # loss
+    return your_choice_normalized; # loss
 }
 
 func run_round_part1(opnt_choice: byte, your_choice: byte) usize {
-    std::assert('A' <= opnt_choice and opnt_choice <= 'C');
-    std::assert('X' <= your_choice and your_choice <= 'Z');
-    var opnt_choice_normalized = (:usize)opnt_choice - 'A';
-    var your_choice_normalized = (:usize)your_choice - 'X';
-    return run_round(opnt_choice_normalized, your_choice_normalized);
+    return run_round(normalize(opnt_choice), normalize(your_choice));
 }
 
 func run_round_part2(opnt_choice: byte, outcome: byte) usize {
-    std::assert('A' <= opnt_choice and opnt_choice <= 'C');
-    std::assert('X' <= outcome and outcome <= 'Z');
-    var opnt_choice_normalized = (:usize)opnt_choice - 'A';
+    var opnt_choice_normalized = normalize(opnt_choice);
 
     const LOSE: byte = 'X';
     const DRAW: byte = 'Y';
