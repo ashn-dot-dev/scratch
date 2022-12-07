@@ -1,0 +1,54 @@
+import "std";
+
+func find_marker(str: []byte, ndistinct: usize) usize {
+    for i in countof(str) - ndistinct - 1 {
+        var bytes = str[i:i+ndistinct];
+        var is_distinct = true;
+
+        for j in countof(bytes) {
+            for k in j+1:countof(bytes) {
+                if bytes[j] == bytes[k] {
+                    is_distinct = false;
+                    break;
+                }
+            }
+        }
+
+        if is_distinct {
+            return i + ndistinct;
+        }
+    }
+
+    std::assert(false); # unreachable
+    return 0;
+}
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-06.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var result = std::read_all(std::reader::init[[typeof(file)]](&file), allocator);
+    var input = result.value();
+    defer std::slice[[byte]]::delete(allocator, input);
+
+
+    var part1_answer = find_marker(input, 4);
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
+
+    var part2_answer = find_marker(input, 14);
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part2_answer)]](&part2_answer)]);
+}
+################################################################################
+# PART 1: 1953
+# PART 2: 2301
