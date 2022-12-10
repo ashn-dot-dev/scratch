@@ -1,0 +1,106 @@
+import "std";
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-05.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+
+    # Memory for the vectors in the the part 1 and part 2 stack arrays is
+    # automatically cleaned up by std::general_allocator::fini.
+    const STACK_COUNT = 9u;
+    var part1_stacks = (:[STACK_COUNT]std::vector[[byte]])[std::vector[[byte]]::init(allocator)...];
+    var part2_stacks = (:[STACK_COUNT]std::vector[[byte]])[std::vector[[byte]]::init(allocator)...];
+
+    # Initial crate-stack setup.
+    for true {
+        var result = std::read_line(reader, allocator);
+        var optional = result.value();
+        if optional.is_empty() {
+            break;
+        }
+        var line = optional.value();
+        defer std::slice[[byte]]::delete(allocator, line);
+
+        if not std::str::starts_with(line, "[") {
+            break;
+        }
+
+        for i in STACK_COUNT {
+            var char = line[i * 4 + 1];
+            if char == ' ' {
+                continue;
+            }
+            part1_stacks[i].insert(0, char);
+            part2_stacks[i].insert(0, char);
+        }
+    }
+
+    # Moves.
+    for true {
+        var result = std::read_line(reader, allocator);
+        var optional = result.value();
+        if optional.is_empty() {
+            break;
+        }
+        var line = optional.value();
+        defer std::slice[[byte]]::delete(allocator, line);
+
+        if not std::str::starts_with(line, "move") {
+            # Skip until we reach lines with  move instructions.
+            continue;
+        }
+
+        #std::print_line(std::err(), line);
+        var fields = std::str::split(line, " ", allocator);
+        defer std::slice[[[]byte]]::delete(allocator, fields);
+
+        var result = usize::init_from_str(fields[1], 10);
+        var moves = result.value();
+
+        var result = usize::init_from_str(fields[3], 10);
+        var from = result.value() - 1;
+
+        var result = usize::init_from_str(fields[5], 10);
+        var to = result.value() - 1;
+
+        # PART 1
+        for _ in moves {
+            part1_stacks[to].push(part1_stacks[from].pop());
+        }
+
+        # PART 2
+        var position = part2_stacks[to].count();
+        for _ in moves {
+            part2_stacks[to].insert(position, part2_stacks[from].pop());
+        }
+    }
+
+    var part1_answer = (:[STACK_COUNT]byte)[0...];
+    for i in STACK_COUNT {
+        part1_answer[i] = part1_stacks[i].data()[part1_stacks[i].count() - 1];
+    }
+    var part1_answer = part1_answer[0:STACK_COUNT];
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
+
+    var part2_answer = (:[STACK_COUNT]byte)[0...];
+    for i in STACK_COUNT {
+        part2_answer[i] = part2_stacks[i].data()[part2_stacks[i].count() - 1];
+    }
+    var part2_answer = part2_answer[0:STACK_COUNT];
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part2_answer)]](&part2_answer)]);
+}
+################################################################################
+# PART 1: TPGVQPFDH
+# PART 2: DMRDFRHHH
