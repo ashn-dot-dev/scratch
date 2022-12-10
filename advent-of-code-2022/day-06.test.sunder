@@ -36,7 +36,6 @@ func main() void {
     var input = result.value();
     defer std::slice[[byte]]::delete(allocator, input);
 
-
     var part1_answer = find_marker(input, 4);
     std::print_format_line(
         std::out(),
