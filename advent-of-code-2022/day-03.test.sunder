@@ -71,7 +71,7 @@ func main() void {
             group.resize(0);
         }
         var shared = std::optional[[byte]]::EMPTY;
-        for i in 'A':'Z' + 1{
+        for i in 'A':'Z' + 1 {
             var c = (:byte)i;
             if group.data()[0].contains(c) and group.data()[1].contains(c) and group.data()[2].contains(c) {
                 shared = std::optional[[byte]]::init_value(c);
