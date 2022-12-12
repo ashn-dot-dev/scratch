@@ -1,0 +1,169 @@
+import "std";
+
+struct file {
+    var name: []byte;
+    var _size: usize;
+
+    func init(name: []byte, size: usize) file {
+        return (:file){
+            .name = name,
+            ._size = size
+        };
+    }
+
+    func size(self: *file) usize {
+        return self.*._size;
+    }
+}
+
+struct directory {
+    var name: []byte;
+    var parent: *directory;
+    var entries: std::hash_map[[[]byte, entry]];
+
+    func init(allocator: std::allocator, name: []byte, parent: *directory) directory {
+        return (:directory){
+            .name = name,
+            .parent = parent,
+            .entries = std::hash_map[[[]byte, entry]]::init(allocator)
+        };
+    }
+
+    func size(self: *directory) usize {
+        var size = 0u;
+        var iter = std::hash_map_iterator[[[]byte, entry]]::init(&self.*.entries);
+        for iter.advance() {
+            size = size + iter.current().value.*.size();
+        }
+        return size;
+    }
+}
+
+struct entry_itable {
+    var size: func(*any) usize;
+}
+
+struct entry {
+    var itable: *entry_itable;
+    var object: *any;
+
+    func init[[T]](object: *T) entry {
+        const itable = (:entry_itable){
+            .size = T::size
+        };
+        return (:entry){
+            .itable = &itable,
+            .object = object
+        };
+    }
+
+    func size(self: *entry) usize {
+        return self.*.itable.*.size(self.*.object);
+    }
+}
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-07.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+    var result = std::read_all(reader, allocator);
+    var input = std::ascii::view_trimmed(result.value());
+
+    var lines = std::str::split(input, "\n", allocator);
+    defer std::slice[[[]byte]]::delete(allocator, lines);
+
+    # Top-level root directory.
+    var root = directory::init(allocator, "/", std::ptr[[directory]]::NULL);
+    var dir = &root;
+
+    # Vector of all directories in the filesystem.
+    var dirs = std::vector[[*directory]]::init(allocator);
+    dirs.push(&root);
+
+    var iter = std::slice_iterator[[[]byte]]::init(lines);
+    for iter.advance() {
+        var line = *iter.current();
+        if std::str::starts_with(line, "$ cd") {
+            var name = line[countof("$ cd "): countof(line)];
+            if std::str::eq(name, "/") {
+                dir = &root;
+                continue;
+            }
+
+            if std::str::eq(name, "..") {
+                dir = dir.*.parent;
+                continue;
+            }
+
+            var optional = dir.*.entries.lookup(name);
+            dir = (:*directory)optional.value().object;
+            continue;
+        }
+
+        if std::str::starts_with(line, "$ ls") {
+            # A line with ls is always followed by lines listing files in the
+            # current directory.
+            continue;
+        }
+
+        # Line from ls listing files in the current directory.
+        var fields = std::str::split(line, " ", allocator);
+        defer std::slice[[[]byte]]::delete(allocator, fields);
+        var name = fields[1];
+
+        if dir.*.entries.contains(name) {
+            continue; # Already added.
+        }
+
+        if std::str::eq(fields[0], "dir") {
+            var new = std::new[[directory]](allocator);
+            *new = directory::init(allocator, name, dir);
+            dir.*.entries.insert(name, entry::init[[directory]](new));
+            dirs.push(new);
+            continue;
+        }
+
+        var result = usize::init_from_str(fields[0], 10);
+        var size = result.value();
+        var new = std::new[[::file]](allocator);
+        *new = ::file::init(name, size);
+        dir.*.entries.insert(name, entry::init[[::file]](new));
+    }
+
+    var part1_answer = 0u;
+    var dirs = dirs.data();
+    for i in countof(dirs) {
+        var size = dirs[i].*.size();
+        if size > 100000 {
+            continue;
+        }
+        part1_answer = part1_answer + size;
+    }
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
+
+    var part2_answer = root.size();
+    var need = 30000000 - (70000000 - root.size());
+    for i in countof(dirs) {
+        var size = dirs[i].*.size();
+        if size < need {
+            continue;
+        }
+        part2_answer = *std::min[[usize]](&part2_answer, &size);
+    }
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part2_answer)]](&part2_answer)]);
+}
+################################################################################
+# PART 1: 1243729
+# PART 2: 4443914
