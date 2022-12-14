@@ -11,8 +11,6 @@ func main() void {
 
     var reader = std::reader::init[[typeof(file)]](&file);
 
-    var part1_answer: usize = 123;
-    var part2_answer: usize = 456;
     for true {
         var result = std::read_line(reader, allocator);
         var optional = result.value();
@@ -26,11 +24,13 @@ func main() void {
         line;
     }
 
+    var part1_answer: usize = 123;
     std::print_format_line(
         std::out(),
         "PART 1: {}",
         (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
 
+    var part2_answer: usize = 456;
     std::print_format_line(
         std::out(),
         "PART 2: {}",

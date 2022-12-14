@@ -9,15 +9,19 @@ func main() void {
     var file = result.value();
     defer file.close();
 
-    var result = std::read_all(std::reader::init[[typeof(file)]](&file), allocator);
-    var input = result.value();
-    defer std::slice[[byte]]::delete(allocator, input);
+    var reader = std::reader::init[[typeof(file)]](&file);
+    var result = std::read_all(reader, allocator);
+    var input = std::ascii::view_trimmed(result.value());
 
-    for i in countof(input) {
-        var char = input[i];
+    var lines = std::str::split(input, "\n", allocator);
+    defer std::slice[[[]byte]]::delete(allocator, lines);
 
-        # CODE FOR EACH BYTE GOES HERE
-        char;
+    var iter = std::slice_iterator[[[]byte]]::init(lines);
+    for iter.advance() {
+        var line = *iter.current();
+
+        # CODE FOR EACH LINE GOES HERE
+        line;
     }
 
     var part1_answer: usize = 123;
