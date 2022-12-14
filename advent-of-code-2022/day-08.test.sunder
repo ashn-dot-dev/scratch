@@ -1,0 +1,187 @@
+import "std";
+
+func char_to_ssize(char: byte) ssize {
+    var str = (:[]byte){&char, 1};
+    var result = ssize::init_from_str(str, 10);
+    return result.value();
+}
+
+func part1(allocator: std::allocator, lines: [][]byte) void {
+    std::assert(countof(lines) == countof(lines[0]));
+    var side_length = countof(lines); # Square grid.
+
+    var visible = std::slice[[[]bool]]::new(allocator, side_length);
+    defer std::slice[[[]bool]]::delete(allocator, visible);
+    for i in side_length {
+        visible[i] = std::slice[[bool]]::new(allocator, side_length);
+    }
+
+    defer {
+        for i in side_length {
+            std::slice[[bool]]::delete(allocator, visible[i]);
+        }
+    }
+
+    # Left to right.
+    for row in side_length {
+        var max = -1s;
+        for col in side_length {
+            var tree = char_to_ssize(lines[row][col]);
+            if tree > max {
+                visible[row][col] = true;
+            }
+            max = *std::max[[ssize]](&max, &tree);
+        }
+    }
+
+    # Right to left.
+    for row in side_length {
+        var max = -1s;
+        for j in side_length {
+            var col = side_length - j - 1;
+            var tree = char_to_ssize(lines[row][col]);
+            if tree > max {
+                visible[row][col] = true;
+            }
+            max = *std::max[[ssize]](&max, &tree);
+        }
+    }
+
+    # Top to bottom.
+    for col in side_length {
+        var max = -1s;
+        for row in side_length {
+            var tree = char_to_ssize(lines[row][col]);
+            if tree > max {
+                visible[row][col] = true;
+            }
+            max = *std::max[[ssize]](&max, &tree);
+        }
+    }
+
+    # Bottom to top.
+    for i in side_length {
+        var col = side_length - i - 1;
+        var max = -1s;
+        for j in side_length {
+            var row = side_length - j - 1;
+            var tree = char_to_ssize(lines[row][col]);
+            if tree > max {
+                visible[row][col] = true;
+            }
+            max = *std::max[[ssize]](&max, &tree);
+        }
+    }
+
+    var part1_answer = 0u;
+    for row in side_length {
+        for col in side_length {
+            part1_answer = part1_answer + (:usize)visible[row][col];
+        }
+    }
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
+}
+
+func part2(allocator: std::allocator, lines: [][]byte) void {
+    std::assert(countof(lines) == countof(lines[0]));
+    var side_length = countof(lines); # Square grid.
+
+    var score = std::slice[[[]usize]]::new(allocator, side_length);
+    defer std::slice[[[]usize]]::delete(allocator, score);
+    for i in side_length {
+        score[i] = std::slice[[usize]]::new(allocator, side_length);
+        std::slice[[usize]]::fill(score[i], 1);
+    }
+
+    defer {
+        for i in side_length {
+            std::slice[[usize]]::delete(allocator, score[i]);
+        }
+    }
+
+    for row in side_length {
+        for col in side_length {
+            var tree = char_to_ssize(lines[row][col]);
+
+            # Left.
+            var dist_l = 0u;
+            for dist_l != col {
+                var view = char_to_ssize(lines[row][col - dist_l - 1]);
+                dist_l = dist_l + 1;
+                if view >= tree {
+                    break;
+                }
+            }
+
+            # Right.
+            var dist_r = 0u;
+            for dist_r + col + 1 != side_length {
+                var view = char_to_ssize(lines[row][col + dist_r + 1]);
+                dist_r = dist_r + 1;
+                if view >= tree {
+                    break;
+                }
+            }
+
+            # Up.
+            var dist_u = 0u;
+            for dist_u != row {
+                var view = char_to_ssize(lines[row - dist_u - 1][col]);
+                dist_u = dist_u + 1;
+                if view >= tree {
+                    break;
+                }
+            }
+
+            # Down.
+            var dist_d = 0u;
+            for dist_d + row + 1 != side_length {
+                var view = char_to_ssize(lines[row + dist_d + 1][col]);
+                dist_d = dist_d + 1;
+                if view >= tree {
+                    break;
+                }
+            }
+
+            # Total score for this tree.
+            score[row][col] = dist_l * dist_r * dist_u * dist_d;
+        }
+    }
+
+    var part2_answer = 0u;
+    for row in side_length {
+        for col in side_length {
+            part2_answer = *std::max[[usize]](&part2_answer, &score[row][col]);
+        }
+    }
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part2_answer)]](&part2_answer)]);
+}
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-08.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+    var result = std::read_all(reader, allocator);
+    var input = std::ascii::view_trimmed(result.value());
+
+    var lines = std::str::split(input, "\n", allocator);
+    defer std::slice[[[]byte]]::delete(allocator, lines);
+
+    part1(allocator, lines);
+    part2(allocator, lines);
+}
+################################################################################
+# PART 1: 1705
+# PART 2: 371200
