@@ -1,0 +1,123 @@
+import "std";
+
+func run(allocator: std::allocator, lines: [][]byte, knots: []position) usize {
+    var visited = std::hash_map[[position, void]]::init(allocator);
+    visited.insert(knots[countof(knots) - 1], void::VALUE);
+
+    var iter = std::slice_iterator[[[]byte]]::init(lines);
+    for iter.advance() {
+        var line = *iter.current();
+
+        var direction = line[0];
+        var steps = line[2:countof(line)];
+        var result = ssize::init_from_str(steps, 10);
+        var steps = result.value();
+
+        for _ in (:usize)steps {
+
+            # Head movement.
+            if direction == 'L' {
+                knots[0][0] = knots[0][0] - 1;
+            }
+            elif direction == 'R' {
+                knots[0][0] = knots[0][0] + 1;
+            }
+            elif direction == 'U' {
+                knots[0][1] = knots[0][1] - 1;
+            }
+            elif direction == 'D' {
+                knots[0][1] = knots[0][1] + 1;
+            }
+
+            # Body and tail movement.
+            for k in 1:countof(knots) {
+                if knots[k - 1][0] - knots[k][0] >  1 and knots[k - 1][1] - knots[k][1] >= 1
+                or knots[k - 1][0] - knots[k][0] >= 1 and knots[k - 1][1] - knots[k][1] >  1 {
+                    knots[k][0] = knots[k][0] + 1;
+                    knots[k][1] = knots[k][1] + 1;
+                }
+                elif knots[k - 1][0] - knots[k][0] >  1 and knots[k][1] - knots[k - 1][1] >= 1
+                or   knots[k - 1][0] - knots[k][0] >= 1 and knots[k][1] - knots[k - 1][1] >  1 {
+                    knots[k][0] = knots[k][0] + 1;
+                    knots[k][1] = knots[k][1] - 1;
+                }
+                elif knots[k][0] - knots[k - 1][0] >  1 and knots[k - 1][1] - knots[k][1] >= 1
+                or   knots[k][0] - knots[k - 1][0] >= 1 and knots[k - 1][1] - knots[k][1] >  1 {
+                    knots[k][0] = knots[k][0] - 1;
+                    knots[k][1] = knots[k][1] + 1;
+                }
+                elif knots[k][0] - knots[k - 1][0] >  1 and knots[k][1] - knots[k - 1][1] >= 1
+                or   knots[k][0] - knots[k - 1][0] >= 1 and knots[k][1] - knots[k - 1][1] >  1 {
+                    knots[k][0] = knots[k][0] - 1;
+                    knots[k][1] = knots[k][1] - 1;
+                }
+                elif knots[k - 1][0] - knots[k][0] > 1 {
+                    knots[k][0] = knots[k][0] + 1;
+                }
+                elif knots[k][0] - knots[k - 1][0] > 1 {
+                    knots[k][0] = knots[k][0] - 1;
+                }
+                elif knots[k - 1][1] - knots[k][1] > 1 {
+                    knots[k][1] = knots[k][1] + 1;
+                }
+                elif knots[k][1] - knots[k - 1][1] > 1 {
+                    knots[k][1] = knots[k][1] - 1;
+                }
+            }
+
+            # Note where the tail was.
+            visited.insert(knots[countof(knots) - 1], void::VALUE);
+        }
+    }
+
+    return visited.count();
+}
+
+func main() void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var result = std::file::open("day-09.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+    var result = std::read_all(reader, allocator);
+    var input = std::ascii::view_trimmed(result.value());
+
+    var lines = std::str::split(input, "\n", allocator);
+    defer std::slice[[[]byte]]::delete(allocator, lines);
+
+    var knots = (:[2]position)[(:position)[0, 0]...];
+    var part1_answer = run(allocator, lines, knots[0:countof(knots)]);
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
+
+    var knots = (:[10]position)[(:position)[0, 0]...];
+    var part2_answer = run(allocator, lines, knots[0:countof(knots)]);
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part2_answer)]](&part2_answer)]);
+}
+
+alias position = [2]ssize; # [x, y]
+
+extend position func compare(lhs: *position, rhs: *position) ssize {
+    var cmp = ssize::compare(&lhs.*[0], &rhs.*[0]);
+    if cmp != 0 {
+        return cmp;
+    }
+    return ssize::compare(&lhs.*[1], &rhs.*[1]);
+}
+
+extend position func hash(self: *position) usize {
+    return self.*[0].hash() +% self.*[1].hash();
+}
+
+################################################################################
+# PART 1: 6266
+# PART 2: 2369
