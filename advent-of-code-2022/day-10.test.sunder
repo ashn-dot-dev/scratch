@@ -59,21 +59,17 @@ func main() void {
             part1_answer = part1_answer + strength;
         }
 
-        var beam = (:ssize)(cycle % CYCLES_PER_SCAN_LINE);
-        # XXX: This first comparion in the if statement, `beam == x + 2`, was
-        # originally `beam == x - 1`, as the X register is supposed to indicate
-        # the center of the beam. Why does `x + 2` produce the correct answer
-        # instead of `x - 1`?
-        if beam == x + 2 or beam == x or beam == x + 1 {
+        var beam = (:ssize)(cycle % CYCLES_PER_SCAN_LINE) - 1;
+        if beam == x - 1 or beam == x or beam == x + 1 {
             std::print(std::writer::init[[std::string]](&s), "#");
         }
         else {
             std::print(std::writer::init[[std::string]](&s), ".");
         }
 
-        debug(cycle, x, instructions.data()[0], &s);
+        #debug(cycle, x, instructions.data()[0], &s);
 
-        if beam == 0 {
+        if cycle % CYCLES_PER_SCAN_LINE == 0 {
             std::print_line(std::out(), s.data());
             s.resize(0);
         }
