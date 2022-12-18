@@ -9,7 +9,6 @@ func find_marker(str: []byte, ndistinct: usize) usize {
             for k in j+1:countof(bytes) {
                 if bytes[j] == bytes[k] {
                     is_distinct = false;
-                    break;
                 }
             }
         }
