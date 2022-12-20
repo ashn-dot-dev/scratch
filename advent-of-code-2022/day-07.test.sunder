@@ -90,7 +90,7 @@ func main() void {
     for iter.advance() {
         var line = *iter.current();
         if std::str::starts_with(line, "$ cd") {
-            var name = line[countof("$ cd "): countof(line)];
+            var name = line[countof("$ cd ") : countof(line)];
             if std::str::eq(name, "/") {
                 dir = &root;
                 continue;
