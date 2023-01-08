@@ -14,6 +14,7 @@ func part1(allocator: std::allocator, lines: [][]byte) void {
     defer std::slice[[[]bool]]::delete(allocator, visible);
     for i in side_length {
         visible[i] = std::slice[[bool]]::new(allocator, side_length);
+        std::slice[[bool]]::fill(visible[i], false);
     }
 
     defer {
