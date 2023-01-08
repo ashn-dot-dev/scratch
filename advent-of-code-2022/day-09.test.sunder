@@ -16,51 +16,51 @@ func run(allocator: std::allocator, lines: [][]byte, knots: []position) usize {
         for _ in (:usize)steps {
             # Head movement.
             if direction == 'L' {
-                knots[0][0] = knots[0][0] - 1;
+                knots[0][x] = knots[0][x] - 1;
             }
             elif direction == 'R' {
-                knots[0][0] = knots[0][0] + 1;
+                knots[0][x] = knots[0][x] + 1;
             }
             elif direction == 'U' {
-                knots[0][1] = knots[0][1] - 1;
+                knots[0][y] = knots[0][y] - 1;
             }
             elif direction == 'D' {
-                knots[0][1] = knots[0][1] + 1;
+                knots[0][y] = knots[0][y] + 1;
             }
 
             # Body and tail movement.
             for k in 1:countof(knots) {
-                if knots[k - 1][0] - knots[k][0] >  1 and knots[k - 1][1] - knots[k][1] >= 1
-                or knots[k - 1][0] - knots[k][0] >= 1 and knots[k - 1][1] - knots[k][1] >  1 {
-                    knots[k][0] = knots[k][0] + 1;
-                    knots[k][1] = knots[k][1] + 1;
+                if knots[k - 1][x] - knots[k][x] >  1 and knots[k - 1][y] - knots[k][y] >= 1
+                or knots[k - 1][x] - knots[k][x] >= 1 and knots[k - 1][y] - knots[k][y] >  1 {
+                    knots[k][x] = knots[k][x] + 1;
+                    knots[k][y] = knots[k][y] + 1;
                 }
-                elif knots[k - 1][0] - knots[k][0] >  1 and knots[k][1] - knots[k - 1][1] >= 1
-                or   knots[k - 1][0] - knots[k][0] >= 1 and knots[k][1] - knots[k - 1][1] >  1 {
-                    knots[k][0] = knots[k][0] + 1;
-                    knots[k][1] = knots[k][1] - 1;
+                elif knots[k - 1][x] - knots[k][x] >  1 and knots[k][y] - knots[k - 1][y] >= 1
+                or   knots[k - 1][x] - knots[k][x] >= 1 and knots[k][y] - knots[k - 1][y] >  1 {
+                    knots[k][x] = knots[k][x] + 1;
+                    knots[k][y] = knots[k][y] - 1;
                 }
-                elif knots[k][0] - knots[k - 1][0] >  1 and knots[k - 1][1] - knots[k][1] >= 1
-                or   knots[k][0] - knots[k - 1][0] >= 1 and knots[k - 1][1] - knots[k][1] >  1 {
-                    knots[k][0] = knots[k][0] - 1;
-                    knots[k][1] = knots[k][1] + 1;
+                elif knots[k][x] - knots[k - 1][x] >  1 and knots[k - 1][y] - knots[k][y] >= 1
+                or   knots[k][x] - knots[k - 1][x] >= 1 and knots[k - 1][y] - knots[k][y] >  1 {
+                    knots[k][x] = knots[k][x] - 1;
+                    knots[k][y] = knots[k][y] + 1;
                 }
-                elif knots[k][0] - knots[k - 1][0] >  1 and knots[k][1] - knots[k - 1][1] >= 1
-                or   knots[k][0] - knots[k - 1][0] >= 1 and knots[k][1] - knots[k - 1][1] >  1 {
-                    knots[k][0] = knots[k][0] - 1;
-                    knots[k][1] = knots[k][1] - 1;
+                elif knots[k][x] - knots[k - 1][x] >  1 and knots[k][y] - knots[k - 1][y] >= 1
+                or   knots[k][x] - knots[k - 1][x] >= 1 and knots[k][y] - knots[k - 1][y] >  1 {
+                    knots[k][x] = knots[k][x] - 1;
+                    knots[k][y] = knots[k][y] - 1;
                 }
-                elif knots[k - 1][0] - knots[k][0] > 1 {
-                    knots[k][0] = knots[k][0] + 1;
+                elif knots[k - 1][x] - knots[k][x] > 1 {
+                    knots[k][x] = knots[k][x] + 1;
                 }
-                elif knots[k][0] - knots[k - 1][0] > 1 {
-                    knots[k][0] = knots[k][0] - 1;
+                elif knots[k][x] - knots[k - 1][x] > 1 {
+                    knots[k][x] = knots[k][x] - 1;
                 }
-                elif knots[k - 1][1] - knots[k][1] > 1 {
-                    knots[k][1] = knots[k][1] + 1;
+                elif knots[k - 1][y] - knots[k][y] > 1 {
+                    knots[k][y] = knots[k][y] + 1;
                 }
-                elif knots[k][1] - knots[k - 1][1] > 1 {
-                    knots[k][1] = knots[k][1] - 1;
+                elif knots[k][y] - knots[k - 1][y] > 1 {
+                    knots[k][y] = knots[k][y] - 1;
                 }
             }
 
@@ -103,18 +103,20 @@ func main() void {
         (:[]std::formatter)[std::formatter::init[[typeof(part2_answer)]](&part2_answer)]);
 }
 
+const x = 0u;
+const y = 1u;
 alias position = [2]ssize; # [x, y]
 
 extend position func compare(lhs: *position, rhs: *position) ssize {
-    var cmp = ssize::compare(&lhs.*[0], &rhs.*[0]);
+    var cmp = ssize::compare(&lhs.*[x], &rhs.*[x]);
     if cmp != 0 {
         return cmp;
     }
-    return ssize::compare(&lhs.*[1], &rhs.*[1]);
+    return ssize::compare(&lhs.*[y], &rhs.*[y]);
 }
 
 extend position func hash(self: *position) usize {
-    return self.*[0].hash() +% self.*[1].hash();
+    return self.*[x].hash() +% self.*[y].hash();
 }
 
 ################################################################################
