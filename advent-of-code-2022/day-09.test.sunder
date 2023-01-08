@@ -14,7 +14,6 @@ func run(allocator: std::allocator, lines: [][]byte, knots: []position) usize {
         var steps = result.value();
 
         for _ in (:usize)steps {
-
             # Head movement.
             if direction == 'L' {
                 knots[0][0] = knots[0][0] - 1;
