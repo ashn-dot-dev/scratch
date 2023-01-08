@@ -86,23 +86,11 @@ func part1(allocator: std::allocator, lines: [][]byte) void {
         (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
 }
 
-func part2(allocator: std::allocator, lines: [][]byte) void {
+func part2(lines: [][]byte) void {
     std::assert(countof(lines) == countof(lines[0]));
     var side_length = countof(lines); # Square grid.
 
-    var score = std::slice[[[]usize]]::new(allocator, side_length);
-    defer std::slice[[[]usize]]::delete(allocator, score);
-    for i in side_length {
-        score[i] = std::slice[[usize]]::new(allocator, side_length);
-        std::slice[[usize]]::fill(score[i], 1);
-    }
-
-    defer {
-        for i in side_length {
-            std::slice[[usize]]::delete(allocator, score[i]);
-        }
-    }
-
+    var part2_answer = 0u;
     for row in side_length {
         for col in side_length {
             var tree = char_to_ssize(lines[row][col]);
@@ -148,16 +136,11 @@ func part2(allocator: std::allocator, lines: [][]byte) void {
             }
 
             # Total score for this tree.
-            score[row][col] = dist_l * dist_r * dist_u * dist_d;
+            var score = dist_l * dist_r * dist_u * dist_d;
+            part2_answer = *std::max[[usize]](&part2_answer, &score);
         }
     }
 
-    var part2_answer = 0u;
-    for row in side_length {
-        for col in side_length {
-            part2_answer = *std::max[[usize]](&part2_answer, &score[row][col]);
-        }
-    }
     std::print_format_line(
         std::out(),
         "PART 2: {}",
@@ -181,7 +164,7 @@ func main() void {
     defer std::slice[[[]byte]]::delete(allocator, lines);
 
     part1(allocator, lines);
-    part2(allocator, lines);
+    part2(lines);
 }
 ################################################################################
 # PART 1: 1705
