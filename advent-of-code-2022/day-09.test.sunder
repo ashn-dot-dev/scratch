@@ -1,8 +1,72 @@
 import "std";
 
+func display(visited: *std::hash_map[[position, void]], knots: []position) void {
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var string = std::string::init(allocator);
+    var writer = std::writer::init[[std::string]](&string);
+
+    const MIN_X = -80s;
+    const MAX_X = +80s;
+    const MIN_Y = -20s;
+    const MAX_Y = +20s;
+
+    std::print(writer, "\x1B[H\x1B[2J"); # clear screen
+    for i in (:usize)(MAX_Y - MIN_Y) {
+        var row = (:ssize)i + MIN_Y;
+        for j in (:usize)(MAX_X - MIN_X) {
+            var col = (:ssize)j + MIN_X;
+            var pos = (:position)[col, row];
+
+            std::assert(countof(knots) != 0);
+            if knots[0][x] == col and knots[0][y] == row  {
+                std::print(writer, "H");
+                continue;
+            }
+
+            std::assert(countof(knots) <= 10);
+            var wrote_knot = false;
+            for k in 1:countof(knots) {
+                if knots[k][x] == col and knots[k][y] == row  {
+                    std::print_format(
+                        writer,
+                        "{}",
+                        (:[]std::formatter)[std::formatter::init[[usize]](&k)]);
+                    wrote_knot = true;
+                    break;
+                }
+            }
+            if wrote_knot {
+                continue;
+            }
+
+            if visited.*.contains(pos) {
+                std::print(writer, "#");
+                continue;
+            }
+
+            std::print(writer, ".");
+        }
+        std::print(writer, "\n");
+    }
+
+    std::print(std::out(), string.data());
+    if opt_step {
+        var buffer = (:[1]byte)[0...];
+        var reader = std::input();
+        reader.read(buffer[0:countof(buffer)]);
+    }
+}
+
 func run(allocator: std::allocator, lines: [][]byte, knots: []position) usize {
     var visited = std::hash_map[[position, void]]::init(allocator);
     visited.insert(knots[countof(knots) - 1], void::VALUE);
+
+    if opt_display {
+        display(&visited, knots);
+    }
 
     var iter = std::slice_iterator[[[]byte]]::init(lines);
     for iter.advance() {
@@ -81,16 +145,64 @@ func run(allocator: std::allocator, lines: [][]byte, knots: []position) usize {
 
             # Note where the tail was.
             visited.insert(knots[countof(knots) - 1], void::VALUE);
+            if opt_display {
+                display(&visited, knots);
+            }
         }
     }
 
     return visited.count();
 }
 
+var opt_display = false;
+var opt_step = false;
+var opt_do_part1 = true;
+var opt_do_part2 = true;
+
 func main() void {
     var allocator = std::general_allocator::init();
     defer allocator.fini();
     var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var parser = std::argument_parser::init((:[][]byte)[
+        "d",
+        "display",
+        "s",
+        "step",
+        "1",
+        "2"
+    ]);
+
+    for parser.advance() {
+        if parser.check_option("d") or parser.check_option("display") {
+            opt_display = true;
+            continue;
+        }
+
+        if parser.check_option("s") or parser.check_option("step") {
+            opt_display = true;
+            opt_step = true;
+            continue;
+        }
+
+        if parser.check_option("1") {
+            opt_do_part1 = true;
+            opt_do_part2 = false;
+            continue;
+        }
+
+        if parser.check_option("2") {
+            opt_do_part1 = false;
+            opt_do_part2 = true;
+            continue;
+        }
+
+        var argument = parser.argument_value();
+        std::print_format_line(
+            std::out(),
+            "invalid argument argument `{}`",
+            (:[]std::formatter)[std::formatter::init[[[]byte]](&argument)]);
+     }
 
     var result = std::file::open("day-09.input", std::file::OPEN_READ);
     var file = result.value();
@@ -103,19 +215,23 @@ func main() void {
     var lines = std::str::split(input, "\n", allocator);
     defer std::slice[[[]byte]]::delete(allocator, lines);
 
-    var knots = (:[2]position)[(:position)[0, 0]...];
-    var part1_answer = run(allocator, lines, knots[0:countof(knots)]);
-    std::print_format_line(
-        std::out(),
-        "PART 1: {}",
-        (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
+    if opt_do_part1 {
+        var knots = (:[2]position)[(:position)[0, 0]...];
+        var part1_answer = run(allocator, lines, knots[0:countof(knots)]);
+        std::print_format_line(
+            std::out(),
+            "PART 1: {}",
+            (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
+    }
 
-    var knots = (:[10]position)[(:position)[0, 0]...];
-    var part2_answer = run(allocator, lines, knots[0:countof(knots)]);
-    std::print_format_line(
-        std::out(),
-        "PART 2: {}",
-        (:[]std::formatter)[std::formatter::init[[typeof(part2_answer)]](&part2_answer)]);
+    if opt_do_part2 {
+        var knots = (:[10]position)[(:position)[0, 0]...];
+        var part2_answer = run(allocator, lines, knots[0:countof(knots)]);
+        std::print_format_line(
+            std::out(),
+            "PART 2: {}",
+            (:[]std::formatter)[std::formatter::init[[typeof(part2_answer)]](&part2_answer)]);
+    }
 }
 
 const x = 0u;
