@@ -1,17 +1,13 @@
 import "std";
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
     var result = std::file::open("day-xx.input", std::file::OPEN_READ);
     var file = result.value();
     defer file.close();
 
-    var result = std::read_all(std::reader::init[[typeof(file)]](&file), allocator);
+    var result = std::read_all(std::reader::init[[typeof(file)]](&file));
     var input = result.value();
-    defer std::slice[[byte]]::delete(allocator, input);
+    defer std::slice[[byte]]::delete(input);
 
     for i in countof(input) {
         var char = input[i];

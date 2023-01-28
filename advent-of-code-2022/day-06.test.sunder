@@ -23,17 +23,13 @@ func find_marker(str: []byte, ndistinct: usize) usize {
 }
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
     var result = std::file::open("day-06.input", std::file::OPEN_READ);
     var file = result.value();
     defer file.close();
 
-    var result = std::read_all(std::reader::init[[typeof(file)]](&file), allocator);
+    var result = std::read_all(std::reader::init[[typeof(file)]](&file));
     var input = result.value();
-    defer std::slice[[byte]]::delete(allocator, input);
+    defer std::slice[[byte]]::delete(input);
 
     var part1_answer = find_marker(input, 4);
     std::print_format_line(

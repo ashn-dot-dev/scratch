@@ -2,8 +2,8 @@ import "std";
 
 const INPUT = "1113222113";
 
-func encode(data: []byte, allocator: std::allocator) std::vector[[byte]] {
-    var output = std::vector[[byte]]::init(allocator);
+func encode(data: []byte) std::vector[[byte]] {
+    var output = std::vector[[byte]]::init();
 
     var start = 0u;
     for cur in countof(data) {
@@ -24,19 +24,15 @@ func encode(data: []byte, allocator: std::allocator) std::vector[[byte]] {
 }
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+    # Letting the operating system reclaim resources at program exit.
 
-    # All string data is freed by the general allocator at main exit.
-
-    var s = std::vector[[byte]]::init(allocator);
+    var s = std::vector[[byte]]::init();
     for i in countof(INPUT) {
         s.push(INPUT[i]);
     }
 
     for _ in 40 {
-        var tmp = encode(s.data(), allocator);
+        var tmp = encode(s.data());
         s.fini();
         s = tmp;
     }
@@ -47,7 +43,7 @@ func main() void {
         (:[]std::formatter)[std::formatter::init[[usize]](&length)]);
 
     for _ in 40:50 {
-        var tmp = encode(s.data(), allocator);
+        var tmp = encode(s.data());
         s.fini();
         s = tmp;
     }

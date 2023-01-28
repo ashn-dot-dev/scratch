@@ -1,11 +1,9 @@
 import "std";
 
-func jort_sort[[T]](slice: []T, allocator: std::allocator) bool {
+func jort_sort[[T]](slice: []T) bool {
     # Sort the array.
-    var original = std::slice[[T]]::new(allocator, countof(slice));
-    defer {
-        std::slice[[T]]::delete(allocator, original);
-    }
+    var original = std::slice[[T]]::new(countof(slice));
+    defer std::slice[[T]]::delete(original);
     std::slice[[T]]::copy(original, slice);
     std::quick_sort[[T]](slice);
 

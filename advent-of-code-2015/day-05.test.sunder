@@ -16,7 +16,7 @@ func nice1(str: []byte) bool {
         not std::str::contains(str, "xy");
 }
 
-func nice2(str: []byte, allocator: std::allocator) bool {
+func nice2(str: []byte) bool {
     var repeats = false;
     for i in countof(str) - 2 {
         if str[i] == str[i + 2] {
@@ -26,7 +26,7 @@ func nice2(str: []byte, allocator: std::allocator) bool {
 
     var double_pair = false;
     # Map from pair strings to the first index where that string occured.
-    var pairs = std::hash_map[[[]byte, usize]]::init(allocator);
+    var pairs = std::hash_map[[[]byte, usize]]::init();
     defer pairs.fini();
     for i in countof(str) - 1 {
         var pair = str[i : i + 2];
@@ -49,10 +49,6 @@ func nice2(str: []byte, allocator: std::allocator) bool {
 }
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
     var result = std::file::open("day-05.input", std::file::OPEN_READ);
     var file = result.value();
     defer file.close();
@@ -62,18 +58,18 @@ func main() void {
     var nice1_count = 0u;
     var nice2_count = 0u;
     for true {
-        var result = std::read_line(reader, allocator);
+        var result = std::read_line(reader);
         var optional = result.value();
         if optional.is_empty() {
             break;
         }
         var line = optional.value();
-        defer std::slice[[byte]]::delete(allocator, line);
+        defer std::slice[[byte]]::delete(line);
 
         if nice1(line) {
             nice1_count = nice1_count + 1;
         }
-        if nice2(line, allocator) {
+        if nice2(line) {
             nice2_count = nice2_count + 1;
         }
     }

@@ -14,15 +14,15 @@ func main() void {
     # Memory for the vectors in the the part 1 and part 2 stack arrays is
     # automatically cleaned up by std::general_allocator::fini.
     const STACK_COUNT = 9u;
-    var part1_stacks = (:[STACK_COUNT]std::vector[[byte]])[std::vector[[byte]]::init(allocator)...];
-    var part2_stacks = (:[STACK_COUNT]std::vector[[byte]])[std::vector[[byte]]::init(allocator)...];
+    var part1_stacks = (:[STACK_COUNT]std::vector[[byte]])[std::vector[[byte]]::init_with_allocator(allocator)...];
+    var part2_stacks = (:[STACK_COUNT]std::vector[[byte]])[std::vector[[byte]]::init_with_allocator(allocator)...];
 
     # Initial crate-stack setup.
     for true {
-        var result = std::read_line(reader, allocator);
+        var result = std::read_line(reader);
         var optional = result.value();
         var line = optional.value();
-        defer std::slice[[byte]]::delete(allocator, line);
+        defer std::slice[[byte]]::delete(line);
 
         if not std::str::starts_with(line, "[") {
             break;
@@ -40,21 +40,21 @@ func main() void {
 
     # Moves.
     for true {
-        var result = std::read_line(reader, allocator);
+        var result = std::read_line(reader);
         var optional = result.value();
         if optional.is_empty() {
             break;
         }
         var line = optional.value();
-        defer std::slice[[byte]]::delete(allocator, line);
+        defer std::slice[[byte]]::delete(line);
 
         if not std::str::starts_with(line, "move") {
             # Skip until we reach lines with  move instructions.
             continue;
         }
 
-        var fields = std::str::split(line, " ", allocator);
-        defer std::slice[[[]byte]]::delete(allocator, fields);
+        var fields = std::str::split(line, " ");
+        defer std::slice[[[]byte]]::delete(fields);
 
         var result = usize::init_from_str(fields[1], 10);
         var moves = result.value();

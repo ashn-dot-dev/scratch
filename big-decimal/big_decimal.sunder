@@ -1,5 +1,4 @@
-import "std/core.sunder";
-import "std/big_integer.sunder";
+import "std";
 
 struct big_decimal {
     # The value of this big decimal is equal to `unscaled * 10**-scale`.
@@ -8,7 +7,7 @@ struct big_decimal {
 
     func init(allocator: std::allocator) big_decimal {
         return (:big_decimal){
-            ._unscaled = std::big_integer::init(allocator),
+            ._unscaled = std::big_integer::init_with_allocator(allocator),
             ._scale = 0
         };
     }
@@ -20,7 +19,7 @@ struct big_decimal {
     }
 
     func init_from_int[[T]](allocator: std::allocator, scale: usize, int: T) big_decimal {
-        var unscaled = std::big_integer::init_from_int[[T]](allocator, int);
+        var unscaled = std::big_integer::init_from_int_with_allocator[[T]](allocator, int);
         for _ in scale {
             std::big_integer::mul(&unscaled, &unscaled, &std::big_integer::POSITIVE_TEN);
         }
@@ -41,7 +40,7 @@ struct big_decimal {
         }
 
         if decimal.is_empty() {
-            var result = std::big_integer::init_from_str(allocator, str, 10);
+            var result = std::big_integer::init_from_str_with_allocator(allocator, str, 10);
             if result.is_error() {
                 return std::result[[big_decimal, std::error]]::init_error(result.error());
             }
@@ -51,21 +50,21 @@ struct big_decimal {
             });
         }
 
-        var result = std::big_integer::init_from_str(allocator, str[0:decimal.value()], 10);
+        var result = std::big_integer::init_from_str_with_allocator(allocator, str[0:decimal.value()], 10);
         if result.is_error() {
             return std::result[[big_decimal, std::error]]::init_error(result.error());
         }
         var integer_part = result.value();
         defer integer_part.fini();
 
-        var result = std::big_integer::init_from_str(allocator, str[decimal.value()+1:countof(str)], 10);
+        var result = std::big_integer::init_from_str_with_allocator(allocator, str[decimal.value()+1:countof(str)], 10);
         if result.is_error() {
             return std::result[[big_decimal, std::error]]::init_error(result.error());
         }
         var decimal_part = result.value();
         defer decimal_part.fini();
 
-        var unscaled = std::big_integer::init_from_big_integer(allocator, &integer_part);
+        var unscaled = std::big_integer::init_from_big_integer_with_allocator(allocator, &integer_part);
         var scale = countof(str[decimal.value()+1:countof(str)]);
         for _ in scale {
             std::big_integer::mul(&unscaled, &unscaled, &std::big_integer::POSITIVE_TEN);
@@ -106,7 +105,7 @@ struct big_decimal {
         }
 
         # self.*._scale > scale
-        var tmp = std::big_integer::init_from_big_integer(self.*._unscaled._allocator, &std::big_integer::POSITIVE_ONE);
+        var tmp = std::big_integer::init_from_big_integer_with_allocator(self.*._unscaled._allocator, &std::big_integer::POSITIVE_ONE);
         defer tmp.fini();
 
         for self.*._scale > scale {
@@ -114,10 +113,10 @@ struct big_decimal {
             self.*._scale = self.*._scale - 1;
         }
 
-        var rem = std::big_integer::init(self.*._unscaled._allocator);
+        var rem = std::big_integer::init_with_allocator(self.*._unscaled._allocator);
         defer rem.fini();
 
-        std::big_integer::_divrem(&self.*._unscaled, &rem, &self.*._unscaled, &tmp);
+        std::big_integer::divrem(&self.*._unscaled, &rem, &self.*._unscaled, &tmp);
         std::big_integer::div(&tmp, &tmp, &std::big_integer::POSITIVE_TWO);
 
         std::big_integer::abs(&rem, &rem);
@@ -160,21 +159,21 @@ struct big_decimal {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
         ];
 
-        var output = std::vector[[byte]]::init(self.*._unscaled._allocator);
+        var output = std::vector[[byte]]::init_with_allocator(self.*._unscaled._allocator);
         defer output.fini();
 
-        var tmp = std::big_integer::init_from_big_integer(self.*._unscaled._allocator, &self.*._unscaled);
+        var tmp = std::big_integer::init_from_big_integer_with_allocator(self.*._unscaled._allocator, &self.*._unscaled);
         defer tmp.fini();
         std::big_integer::abs(&tmp, &tmp);
 
         var scale = self.*._scale;
 
         for scale != 0 {
-            var div = std::big_integer::init(self.*._unscaled._allocator);
+            var div = std::big_integer::init_with_allocator(self.*._unscaled._allocator);
             defer div.fini();
-            var rem = std::big_integer::init(self.*._unscaled._allocator);
+            var rem = std::big_integer::init_with_allocator(self.*._unscaled._allocator);
             defer rem.fini();
-            std::big_integer::_divrem(&div, &rem, &tmp, &std::big_integer::POSITIVE_TEN);
+            std::big_integer::divrem(&div, &rem, &tmp, &std::big_integer::POSITIVE_TEN);
 
             if rem._sign == 0 {
                 output.insert(0u, '0');
@@ -197,11 +196,11 @@ struct big_decimal {
         }
 
         for not std::eq[[std::big_integer]](&tmp, &std::big_integer::ZERO) {
-            var div = std::big_integer::init(self.*._unscaled._allocator);
+            var div = std::big_integer::init_with_allocator(self.*._unscaled._allocator);
             defer div.fini();
-            var rem = std::big_integer::init(self.*._unscaled._allocator);
+            var rem = std::big_integer::init_with_allocator(self.*._unscaled._allocator);
             defer rem.fini();
-            std::big_integer::_divrem(&div, &rem, &tmp, &std::big_integer::POSITIVE_TEN);
+            std::big_integer::divrem(&div, &rem, &tmp, &std::big_integer::POSITIVE_TEN);
 
             if rem._sign == 0 {
                 output.insert(0u, '0');
@@ -340,7 +339,7 @@ struct big_decimal {
             std::big_integer::mul(&tmp_lhs._unscaled, &tmp_lhs._unscaled, &std::big_integer::POSITIVE_TEN);
         }
 
-        var rem = std::big_integer::init(res.*._unscaled._allocator);
+        var rem = std::big_integer::init_with_allocator(res.*._unscaled._allocator);
         defer rem.fini();
 
         const POSITIVE_FIVE_HUNDRED = (:std::big_integer){
@@ -349,7 +348,7 @@ struct big_decimal {
             ._limbs = (:[]u32)[500]
         };
 
-        std::big_integer::_divrem(&res.*._unscaled, &rem, &tmp_lhs._unscaled, &tmp_rhs._unscaled);
+        std::big_integer::divrem(&res.*._unscaled, &rem, &tmp_lhs._unscaled, &tmp_rhs._unscaled);
         std::big_integer::abs(&rem, &rem);
         if std::ge[[std::big_integer]](&rem, &POSITIVE_FIVE_HUNDRED) {
             # Round half up.

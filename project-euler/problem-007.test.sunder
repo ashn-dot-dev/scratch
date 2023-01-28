@@ -6,15 +6,8 @@
 import "std";
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer {
-        allocator.fini();
-    }
-
-    var primes = std::vector[[usize]]::init(std::allocator::init[[typeof(allocator)]](&allocator));
-    defer {
-        primes.fini();
-    }
+    var primes = std::vector[[usize]]::init();
+    defer primes.fini();
 
     var n = 2u;
     primes.push(n);

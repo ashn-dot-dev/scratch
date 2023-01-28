@@ -8,7 +8,7 @@ struct assignment {
         var buf = (:[64]byte)[0...];
         var allocator = std::linear_allocator::init(buf[0:countof(buf)]);
         var allocator = std::allocator::init[[std::linear_allocator]](&allocator);
-        var sections = std::str::split(str, "-", allocator);
+        var sections = std::str::split_with_allocator(allocator, str, "-");
         std::assert(countof(sections) == 2);
 
         var lo = usize::init_from_str(sections[0], 10);
@@ -18,10 +18,6 @@ struct assignment {
 }
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
     var result = std::file::open("day-04.input", std::file::OPEN_READ);
     var file = result.value();
     defer file.close();
@@ -31,16 +27,16 @@ func main() void {
     var part1_answer = 0u;
     var part2_answer = 0u;
     for true {
-        var result = std::read_line(reader, allocator);
+        var result = std::read_line(reader);
         var optional = result.value();
         if optional.is_empty() {
             break;
         }
         var line = optional.value();
-        defer std::slice[[byte]]::delete(allocator, line);
+        defer std::slice[[byte]]::delete(line);
 
-        var assignments = std::str::split(line, ",", allocator);
-        defer std::slice[[[]byte]]::delete(allocator, assignments);
+        var assignments = std::str::split(line, ",");
+        defer std::slice[[[]byte]]::delete(assignments);
 
         std::assert(countof(assignments) == 2);
         var elf_a = assignment::init_from_str(assignments[0]);

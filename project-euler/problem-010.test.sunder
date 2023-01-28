@@ -5,15 +5,8 @@
 import "std";
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer {
-        allocator.fini();
-    }
-
-    var sieve = std::vector[[bool]]::init(std::allocator::init[[typeof(allocator)]](&allocator));
-    defer {
-        sieve.fini();
-    }
+    var sieve = std::vector[[bool]]::init();
+    defer sieve.fini();
     sieve.resize(2000000);
     for i in sieve.count() {
         sieve.data()[i] = true; # all default to "is prime"

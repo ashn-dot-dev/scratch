@@ -208,30 +208,18 @@ const data = (:[][]byte)[
 ];
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer {
-        allocator.fini();
-    }
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
-    var sum = std::big_integer::init(allocator);
-    defer {
-        sum.fini();
-    }
+    var sum = std::big_integer::init();
+    defer sum.fini();
 
     for i in countof(data) {
-        var result = std::big_integer::init_from_str(allocator, data[i], 10);
+        var result = std::big_integer::init_from_str(data[i], 10);
         var tmp = result.value();
-        defer {
-            tmp.fini();
-        }
+        defer tmp.fini();
         std::big_integer::add(&sum, &sum, &tmp);
     }
 
-    var digits = std::string::init_from_format(allocator, "{}", (:[]std::formatter)[std::formatter::init[[std::big_integer]](&sum)]);
-    defer {
-        digits.fini();
-    }
+    var digits = std::string::init_from_format("{}", (:[]std::formatter)[std::formatter::init[[std::big_integer]](&sum)]);
+    defer digits.fini();
 
     var digits = digits.data()[0:10];
     std::print_format_line(std::out(), "{}", (:[]std::formatter)[std::formatter::init[[[]byte]](&digits)]);

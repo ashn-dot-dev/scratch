@@ -1,52 +1,48 @@
 import "std";
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
     var result = std::file::open("day-06.input", std::file::OPEN_READ);
     var file = result.value();
     defer file.close();
 
     var reader = std::reader::init[[typeof(file)]](&file);
 
-    var part1_grid = std::slice[[[]bool]]::new(allocator, 1000);
+    var part1_grid = std::slice[[[]bool]]::new(1000);
     for i in countof(part1_grid) {
-        part1_grid[i] = std::slice[[bool]]::new(allocator, 1000);
+        part1_grid[i] = std::slice[[bool]]::new(1000);
         std::slice[[bool]]::fill(part1_grid[i], false);
     }
 
-    var part2_grid = std::slice[[[]ssize]]::new(allocator, 1000);
+    var part2_grid = std::slice[[[]ssize]]::new(1000);
     for i in countof(part1_grid) {
-        part2_grid[i] = std::slice[[ssize]]::new(allocator, 1000);
+        part2_grid[i] = std::slice[[ssize]]::new(1000);
         std::slice[[ssize]]::fill(part2_grid[i], 0);
     }
 
     for true {
-        var result = std::read_line(reader, allocator);
+        var result = std::read_line(reader);
         var optional = result.value();
         if optional.is_empty() {
             break;
         }
         var line = optional.value();
-        defer std::slice[[byte]]::delete(allocator, line);
+        defer std::slice[[byte]]::delete(line);
 
-        var fields = std::str::split(line, " ", allocator);
-        defer std::slice[[[]byte]]::delete(allocator, fields);
+        var fields = std::str::split(line, " ");
+        defer std::slice[[[]byte]]::delete(fields);
 
         if std::str::starts_with(line, "turn on") or std::str::starts_with(line, "turn off") {
             var a = fields[2];
-            var a_fields = std::str::split(a, ",", allocator);
-            defer std::slice[[[]byte]]::delete(allocator, a_fields);
+            var a_fields = std::str::split(a, ",");
+            defer std::slice[[[]byte]]::delete(a_fields);
             var result = usize::init_from_str(a_fields[0], 10);
             var a_x = result.value();
             var result = usize::init_from_str(a_fields[1], 10);
             var a_y = result.value();
 
             var b = fields[4];
-            var b_fields = std::str::split(b, ",", allocator);
-            defer std::slice[[[]byte]]::delete(allocator, b_fields);
+            var b_fields = std::str::split(b, ",");
+            defer std::slice[[[]byte]]::delete(b_fields);
             var result = usize::init_from_str(b_fields[0], 10);
             var b_x = result.value();
             var result = usize::init_from_str(b_fields[1], 10);
@@ -78,16 +74,16 @@ func main() void {
         }
         if std::str::starts_with(line, "toggle") {
             var a = fields[1];
-            var a_fields = std::str::split(a, ",", allocator);
-            defer std::slice[[[]byte]]::delete(allocator, a_fields);
+            var a_fields = std::str::split(a, ",");
+            defer std::slice[[[]byte]]::delete(a_fields);
             var result = usize::init_from_str(a_fields[0], 10);
             var a_x = result.value();
             var result = usize::init_from_str(a_fields[1], 10);
             var a_y = result.value();
 
             var b = fields[3];
-            var b_fields = std::str::split(b, ",", allocator);
-            defer std::slice[[[]byte]]::delete(allocator, b_fields);
+            var b_fields = std::str::split(b, ",");
+            defer std::slice[[[]byte]]::delete(b_fields);
             var result = usize::init_from_str(b_fields[0], 10);
             var b_x = result.value();
             var result = usize::init_from_str(b_fields[1], 10);

@@ -14,10 +14,8 @@ func main() void {
             var product = i * j;
 
             var allocator = std::linear_allocator::init(buf[0:countof(buf)]);
-            var string = std::string::init(std::allocator::init[[typeof(allocator)]](&allocator));
-            defer {
-                string.fini();
-            }
+            var string = std::string::init_with_allocator(std::allocator::init[[typeof(allocator)]](&allocator));
+            defer string.fini();
             std::print_format(std::writer::init[[std::string]](&string), "{}", (:[]std::formatter)[std::formatter::init[[usize]](&product)]);
 
             var is_palindrome = true;

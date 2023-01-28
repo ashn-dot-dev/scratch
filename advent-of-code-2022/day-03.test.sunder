@@ -14,10 +14,6 @@ func priority(char: byte) usize {
 }
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
     var result = std::file::open("day-03.input", std::file::OPEN_READ);
     var file = result.value();
     defer file.close();
@@ -26,17 +22,17 @@ func main() void {
 
     var part1_answer = 0u;
     var part2_answer = 0u;
-    var group = std::vector[[std::hash_map[[byte, void]]]]::init(allocator);
+    var group = std::vector[[std::hash_map[[byte, void]]]]::init();
     defer group.fini();
     for true {
-        var result = std::read_line(reader, allocator);
+        var result = std::read_line(reader);
         var optional = result.value();
         if optional.is_empty() {
             break;
         }
 
         var line = optional.value();
-        defer std::slice[[byte]]::delete(allocator, line);
+        defer std::slice[[byte]]::delete(line);
 
         # PART 1
         std::assert(countof(line) % 2 == 0);
@@ -55,7 +51,7 @@ func main() void {
         part1_answer = part1_answer + priority(shared.value());
 
         # PART 2
-        var items = std::hash_map[[byte, void]]::init(allocator);
+        var items = std::hash_map[[byte, void]]::init();
         for i in countof(line) {
             items.insert(line[i], void::VALUE);
         }

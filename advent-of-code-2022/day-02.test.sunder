@@ -71,10 +71,6 @@ func run_round_part2(opnt_choice: byte, outcome: byte) usize {
 }
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
     var result = std::file::open("day-02.input", std::file::OPEN_READ);
     var file = result.value();
     defer file.close();
@@ -84,14 +80,14 @@ func main() void {
     var part1_total_score = 0u;
     var part2_total_score = 0u;
     for true {
-        var result = std::read_line(reader, allocator);
+        var result = std::read_line(reader);
         var optional = result.value();
         if optional.is_empty() {
             break;
         }
 
         var line = optional.value();
-        defer std::slice[[byte]]::delete(allocator, line);
+        defer std::slice[[byte]]::delete(line);
 
         std::assert(countof(line) != 0);
         part1_total_score = part1_total_score + run_round_part1(line[0], line[2]);

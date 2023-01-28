@@ -1,11 +1,7 @@
 import "std";
 
 func display(visited: *std::hash_map[[position, void]], knots: []position) void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
-    var string = std::string::init(allocator);
+    var string = std::string::init();
     var writer = std::writer::init[[std::string]](&string);
 
     const MIN_X = -80s;
@@ -60,8 +56,8 @@ func display(visited: *std::hash_map[[position, void]], knots: []position) void 
     }
 }
 
-func run(allocator: std::allocator, lines: [][]byte, knots: []position) usize {
-    var visited = std::hash_map[[position, void]]::init(allocator);
+func run(lines: [][]byte, knots: []position) usize {
+    var visited = std::hash_map[[position, void]]::init();
     visited.insert(knots[countof(knots) - 1], void::VALUE);
 
     if opt_display {
@@ -160,10 +156,6 @@ var opt_do_part1 = true;
 var opt_do_part2 = true;
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
     var parser = std::argument_parser::init((:[][]byte)[
         "d",
         "display",
@@ -209,15 +201,15 @@ func main() void {
     defer file.close();
 
     var reader = std::reader::init[[typeof(file)]](&file);
-    var result = std::read_all(reader, allocator);
+    var result = std::read_all(reader);
     var input = std::ascii::view_trimmed(result.value());
 
-    var lines = std::str::split(input, "\n", allocator);
-    defer std::slice[[[]byte]]::delete(allocator, lines);
+    var lines = std::str::split(input, "\n");
+    defer std::slice[[[]byte]]::delete(lines);
 
     if opt_do_part1 {
         var knots = (:[2]position)[(:position)[0, 0]...];
-        var part1_answer = run(allocator, lines, knots[0:countof(knots)]);
+        var part1_answer = run(lines, knots[0:countof(knots)]);
         std::print_format_line(
             std::out(),
             "PART 1: {}",
@@ -226,7 +218,7 @@ func main() void {
 
     if opt_do_part2 {
         var knots = (:[10]position)[(:position)[0, 0]...];
-        var part2_answer = run(allocator, lines, knots[0:countof(knots)]);
+        var part2_answer = run(lines, knots[0:countof(knots)]);
         std::print_format_line(
             std::out(),
             "PART 2: {}",

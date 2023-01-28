@@ -18,19 +18,15 @@ struct position {
 }
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
     var result = std::file::open("day-03.input", std::file::OPEN_READ);
     var file = result.value();
     defer file.close();
 
-    var result = std::read_all(std::reader::init[[typeof(file)]](&file), allocator);
+    var result = std::read_all(std::reader::init[[typeof(file)]](&file));
     var input = result.value();
-    defer std::slice[[byte]]::delete(allocator, input);
+    defer std::slice[[byte]]::delete(input);
 
-    var map = std::hash_map[[position, void]]::init(allocator);
+    var map = std::hash_map[[position, void]]::init();
     defer map.fini();
 
     var pos = (:position){.x = 0, .y = 0};
@@ -56,7 +52,7 @@ func main() void {
         "PART 1: {}",
         (:[]std::formatter)[std::formatter::init[[usize]](&houses_visited)]);
 
-    var map = std::hash_map[[position, void]]::init(allocator);
+    var map = std::hash_map[[position, void]]::init();
     defer map.fini();
 
     var pos = (:[]position)[

@@ -14,9 +14,9 @@ struct reindeer {
     var timer: usize; # Time in the current state.
     var distance: usize; # km
 
-    func init(allocator: std::allocator, line: []byte) reindeer {
-        var fields = std::str::split(line, " ", allocator);
-        defer std::slice[[[]byte]]::delete(allocator, fields);
+    func init(line: []byte) reindeer {
+        var fields = std::str::split(line, " ");
+        defer std::slice[[[]byte]]::delete(fields);
 
         var name = fields[0];
         var result = usize::init_from_str(fields[3], 10);
@@ -58,29 +58,25 @@ struct reindeer {
 }
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
     var result = std::file::open("day-14.input", std::file::OPEN_READ);
     var file = result.value();
     defer file.close();
 
-    var result = std::read_all(std::reader::init[[typeof(file)]](&file), allocator);
+    var result = std::read_all(std::reader::init[[typeof(file)]](&file));
     var input = result.value();
-    defer std::slice[[byte]]::delete(allocator, input);
+    defer std::slice[[byte]]::delete(input);
 
-    var lines = std::str::split(std::ascii::view_trimmed(input), "\n", allocator);
-    defer std::slice[[[]byte]]::delete(allocator, lines);
+    var lines = std::str::split(std::ascii::view_trimmed(input), "\n");
+    defer std::slice[[[]byte]]::delete(lines);
 
-    var reindeers = std::slice[[reindeer]]::new(allocator, countof(lines));
-    defer std::slice[[reindeer]]::delete(allocator, reindeers);
+    var reindeers = std::slice[[reindeer]]::new(countof(lines));
+    defer std::slice[[reindeer]]::delete(reindeers);
     for i in countof(reindeers) {
-        reindeers[i] = reindeer::init(allocator, lines[i]);
+        reindeers[i] = reindeer::init(lines[i]);
     }
-    var points = std::slice[[usize]]::new(allocator, countof(reindeers));
+    var points = std::slice[[usize]]::new(countof(reindeers));
     std::slice[[usize]]::fill(points, 0);
-    defer std::slice[[usize]]::delete(allocator, points);
+    defer std::slice[[usize]]::delete(points);
 
     var furthest_distance = 0u;
     for _ in 1:(SECONDS + 1) {

@@ -51,15 +51,8 @@ const data = (:[][]byte)[
 ];
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer {
-        allocator.fini();
-    }
-
-    var digits = std::string::init(std::allocator::init[[typeof(allocator)]](&allocator));
-    defer {
-        digits.fini();
-    }
+    var digits = std::string::init();
+    defer digits.fini();
 
     for i in countof(data) {
         std::print(std::writer::init[[std::string]](&digits), data[i]);

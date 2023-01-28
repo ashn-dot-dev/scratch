@@ -21,11 +21,11 @@ struct directory {
     var parent: *directory;
     var entries: std::hash_map[[[]byte, entry]];
 
-    func init(allocator: std::allocator, name: []byte, parent: *directory) directory {
+    func init(name: []byte, parent: *directory) directory {
         return (:directory){
             .name = name,
             .parent = parent,
-            .entries = std::hash_map[[[]byte, entry]]::init(allocator)
+            .entries = std::hash_map[[[]byte, entry]]::init()
         };
     }
 
@@ -63,27 +63,23 @@ struct entry {
 }
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
     var result = std::file::open("day-07.input", std::file::OPEN_READ);
     var file = result.value();
     defer file.close();
 
     var reader = std::reader::init[[typeof(file)]](&file);
-    var result = std::read_all(reader, allocator);
+    var result = std::read_all(reader);
     var input = std::ascii::view_trimmed(result.value());
 
-    var lines = std::str::split(input, "\n", allocator);
-    defer std::slice[[[]byte]]::delete(allocator, lines);
+    var lines = std::str::split(input, "\n");
+    defer std::slice[[[]byte]]::delete(lines);
 
     # Top-level root directory.
-    var root = directory::init(allocator, "/", std::ptr[[directory]]::NULL);
+    var root = directory::init("/", std::ptr[[directory]]::NULL);
     var dir = &root;
 
     # Vector of all directories in the filesystem.
-    var dirs = std::vector[[*directory]]::init(allocator);
+    var dirs = std::vector[[*directory]]::init();
     dirs.push(&root);
 
     var iter = std::slice_iterator[[[]byte]]::init(lines);
@@ -113,8 +109,8 @@ func main() void {
         }
 
         # Line from ls listing files in the current directory.
-        var fields = std::str::split(line, " ", allocator);
-        defer std::slice[[[]byte]]::delete(allocator, fields);
+        var fields = std::str::split(line, " ");
+        defer std::slice[[[]byte]]::delete(fields);
         var name = fields[1];
 
         if dir.*.entries.contains(name) {
@@ -122,8 +118,8 @@ func main() void {
         }
 
         if std::str::eq(fields[0], "dir") {
-            var new = std::new[[directory]](allocator);
-            *new = directory::init(allocator, name, dir);
+            var new = std::new[[directory]]();
+            *new = directory::init(name, dir);
             dir.*.entries.insert(name, entry::init[[directory]](new));
             dirs.push(new);
             continue;
@@ -131,7 +127,7 @@ func main() void {
 
         var result = usize::init_from_str(fields[0], 10);
         var size = result.value();
-        var new = std::new[[::file]](allocator);
+        var new = std::new[[::file]]();
         *new = ::file::init(name, size);
         dir.*.entries.insert(name, entry::init[[::file]](new));
     }

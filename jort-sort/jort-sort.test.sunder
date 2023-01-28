@@ -11,9 +11,9 @@ func display[[T]](slice: []T) void {
     std::print(std::out(), "\n");
 }
 
-func test[[T]](allocator: std::allocator, slice: []T) void {
+func test[[T]](slice: []T) void {
     display[[T]](slice);
-    var was_sorted = jort_sort[[T]](slice, allocator);
+    var was_sorted = jort_sort[[T]](slice);
     display[[T]](slice);
 
     if was_sorted {
@@ -25,19 +25,13 @@ func test[[T]](allocator: std::allocator, slice: []T) void {
 }
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer {
-        allocator.fini();
-    }
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
-    test[[ssize]](allocator, (:[]ssize)[1, 7, 10]);
+    test[[ssize]]((:[]ssize)[1, 7, 10]);
     std::print(std::out(), "\n");
-    test[[ssize]](allocator, (:[]ssize)[10, 7, 1]);
+    test[[ssize]]((:[]ssize)[10, 7, 1]);
     std::print(std::out(), "\n");
-    test[[[]byte]](allocator, (:[][]byte)["apple", "banana", "carrot"]);
+    test[[[]byte]]((:[][]byte)["apple", "banana", "carrot"]);
     std::print(std::out(), "\n");
-    test[[[]byte]](allocator, (:[][]byte)["carrot", "banana", "apple"]);
+    test[[[]byte]]((:[][]byte)["carrot", "banana", "apple"]);
 }
 ################################################################################
 # 1, 7, 10

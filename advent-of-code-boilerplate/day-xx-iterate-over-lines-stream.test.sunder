@@ -1,10 +1,6 @@
 import "std";
 
 func main() void {
-    var allocator = std::general_allocator::init();
-    defer allocator.fini();
-    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
-
     var result = std::file::open("day-xx.input", std::file::OPEN_READ);
     var file = result.value();
     defer file.close();
@@ -12,13 +8,13 @@ func main() void {
     var reader = std::reader::init[[typeof(file)]](&file);
 
     for true {
-        var result = std::read_line(reader, allocator);
+        var result = std::read_line(reader);
         var optional = result.value();
         if optional.is_empty() {
             break;
         }
         var line = optional.value();
-        defer std::slice[[byte]]::delete(allocator, line);
+        defer std::slice[[byte]]::delete(line);
 
         # CODE FOR EACH LINE GOES HERE
         line;
