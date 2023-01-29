@@ -48,7 +48,7 @@ struct entry {
     var object: *any;
 
     func init[[T]](object: *T) entry {
-        const itable = (:entry_itable){
+        let itable = (:entry_itable){
             .size = T::size
         };
         return (:entry){

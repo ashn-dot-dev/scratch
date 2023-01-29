@@ -9,7 +9,7 @@
 import "std";
 
 func main() void {
-    const TARGET = 1000u;
+    let TARGET = 1000u;
     for a in 1:usize::MAX {
         for b in 1:(TARGET - a + 1) {
             var c_squared = a * a + b * b; # theoretical if Pythagorean triple

@@ -35,7 +35,7 @@ func square_of_sum(n: usize) usize {
 }
 
 func main() void {
-    const n = 100u;
+    let n = 100u;
     var answer = square_of_sum(n) - sum_of_square(n);
     std::print_format_line(std::out(), "{}", (:[]std::formatter)[std::formatter::init[[usize]](&answer)]);
 }

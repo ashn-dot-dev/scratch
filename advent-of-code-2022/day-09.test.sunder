@@ -4,10 +4,10 @@ func display(visited: *std::hash_map[[position, void]], knots: []position) void 
     var string = std::string::init();
     var writer = std::writer::init[[std::string]](&string);
 
-    const MIN_X = -80s;
-    const MAX_X = +80s;
-    const MIN_Y = -20s;
-    const MAX_Y = +20s;
+    let MIN_X = -80s;
+    let MAX_X = +80s;
+    let MIN_Y = -20s;
+    let MAX_Y = +20s;
 
     std::print(writer, "\x1B[H\x1B[2J"); # clear screen
     for i in (:usize)(MAX_Y - MIN_Y) {
@@ -226,8 +226,8 @@ func main() void {
     }
 }
 
-const x = 0u;
-const y = 1u;
+let x = 0u;
+let y = 1u;
 alias position = [2]ssize; # [x, y]
 
 extend position func compare(lhs: *position, rhs: *position) ssize {

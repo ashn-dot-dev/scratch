@@ -1,6 +1,6 @@
 import "std";
 
-const CYCLES_PER_SCAN_LINE = 40u;
+let CYCLES_PER_SCAN_LINE = 40u;
 
 struct instruction {
     var cycles: usize; # Number of cycles remaining.

@@ -1,6 +1,6 @@
 import "std";
 
-const SECONDS = 2503u;
+let SECONDS = 2503u;
 
 struct reindeer {
     var name: []byte;
@@ -8,8 +8,8 @@ struct reindeer {
     var fly_time: usize; # s
     var rest_time: usize; # s
 
-    const STATE_FLYING: usize = 0;
-    const STATE_RESTING: usize = 1;
+    let STATE_FLYING: usize = 0;
+    let STATE_RESTING: usize = 1;
     var state: usize; # The current state.
     var timer: usize; # Time in the current state.
     var distance: usize; # km

@@ -13,7 +13,7 @@ func main() void {
 
     # Memory for the vectors in the the part 1 and part 2 stack arrays is
     # automatically cleaned up by std::general_allocator::fini.
-    const STACK_COUNT = 9u;
+    let STACK_COUNT = 9u;
     var part1_stacks = (:[STACK_COUNT]std::vector[[byte]])[std::vector[[byte]]::init_with_allocator(allocator)...];
     var part2_stacks = (:[STACK_COUNT]std::vector[[byte]])[std::vector[[byte]]::init_with_allocator(allocator)...];
 

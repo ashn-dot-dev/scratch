@@ -155,7 +155,7 @@ struct big_decimal {
             return std::result[[void, std::error]]::init_error(std::error::INVALID_ARGUMENT);
         }
 
-        const DIGITS_TABLE = (:[]byte)[
+        let DIGITS_TABLE = (:[]byte)[
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
         ];
 
@@ -342,7 +342,7 @@ struct big_decimal {
         var rem = std::big_integer::init_with_allocator(res.*._unscaled._allocator);
         defer rem.fini();
 
-        const POSITIVE_FIVE_HUNDRED = (:std::big_integer){
+        let POSITIVE_FIVE_HUNDRED = (:std::big_integer){
             ._allocator = std::null_allocator::ALLOCATOR,
             ._sign = +1,
             ._limbs = (:[]u32)[500]

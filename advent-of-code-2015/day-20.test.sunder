@@ -1,11 +1,11 @@
 import "std";
 import "../integer-square-root/integer-square-root.sunder";
 
-const INPUT = 29000000u;
+let INPUT = 29000000u;
 
 func main() void {
     # Large enough to fit the part 1 and part 2 answers.
-    const MAX_HOUSE_COUNT = 1000000u;
+    let MAX_HOUSE_COUNT = 1000000u;
     # How many house can the Nth part 2 elf still visit.
     var houses = std::slice[[usize]]::new(MAX_HOUSE_COUNT);
     defer std::slice[[usize]]::delete(houses);
