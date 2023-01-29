@@ -5,7 +5,7 @@ func jort_sort[[T]](slice: []T) bool {
     var original = std::slice[[T]]::new(countof(slice));
     defer std::slice[[T]]::delete(original);
     std::slice[[T]]::copy(original, slice);
-    std::quick_sort[[T]](slice);
+    std::sort[[T]](slice);
 
     # Compare to see if it was originally sorted.
     for i in countof(original) {

@@ -29,7 +29,7 @@ func main() void {
         cur = cur + result.value();
     }
 
-    std::quick_sort[[usize]](elves.data());
+    std::sort[[usize]](elves.data());
     std::slice[[usize]]::reverse(elves.data());
 
     var part1_answer = elves.data()[0];
