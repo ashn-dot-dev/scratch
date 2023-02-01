@@ -1,36 +1,60 @@
 import "std";
 
+# Managed arbitrary precision decimal type.
 struct big_decimal {
     # The value of this big decimal is equal to `unscaled * 10**-scale`.
     var _unscaled: std::big_integer;
     var _scale: usize;
 
-    func init(allocator: std::allocator) big_decimal {
+    # Initialize a big decimal with the value zero.
+    func init() big_decimal {
+        return big_decimal::init_with_allocator(std::global_allocator());
+    }
+
+    # Initialize a big decimal with the value zero.
+    # The provided allocator is used for backing storage.
+    func init_with_allocator(allocator: std::allocator) big_decimal {
         return (:big_decimal){
             ._unscaled = std::big_integer::init_with_allocator(allocator),
             ._scale = 0
         };
     }
 
-    func init_from_big_decimal(allocator: std::allocator, from: *big_decimal) big_decimal {
-        var self = big_decimal::init(allocator);
+    # Initialize a big decimal with the value of another big decimal.
+    func init_from_big_decimal(from: *big_decimal) big_decimal {
+        return big_decimal::init_from_big_decimal_with_allocator(std::global_allocator(), from);
+    }
+
+    # Initialize a big decimal with the value of another big decimal.
+    # The provided allocator is used for backing storage.
+    func init_from_big_decimal_with_allocator(allocator: std::allocator, from: *big_decimal) big_decimal {
+        var self = big_decimal::init_with_allocator(allocator);
         big_decimal::assign(&self, from);
         return self;
     }
 
-    func init_from_int[[T]](allocator: std::allocator, scale: usize, int: T) big_decimal {
-        var unscaled = std::big_integer::init_from_int_with_allocator[[T]](allocator, int);
-        for _ in scale {
-            std::big_integer::mul(&unscaled, &unscaled, &std::big_integer::POSITIVE_TEN);
-        }
+    # Initialize a big decimal with the value of a primitive integer.
+    func init_from_int[[T]](int: T) big_decimal {
+        return big_decimal::init_from_int_with_allocator[[T]](std::global_allocator(), int);
+    }
 
+    # Initialize a big decimal with the value of a primitive integer.
+    # The provided allocator is used for backing storage.
+    func init_from_int_with_allocator[[T]](allocator: std::allocator, int: T) big_decimal {
         return (:big_decimal){
-            ._unscaled = unscaled,
-            ._scale = scale
+            ._unscaled = std::big_integer::init_from_int_with_allocator[[T]](allocator, int),
+            ._scale = 0
         };
     }
 
-    func init_from_str(allocator: std::allocator, str: []byte) std::result[[big_decimal, std::error]] {
+    # Initialize a big decimal with the value parsed from a byte slice.
+    func init_from_str(str: []byte) std::result[[big_decimal, std::error]] {
+        return big_decimal::init_from_str_with_allocator(std::global_allocator(), str);
+    }
+
+    # Initialize a big decimal with the value parsed from a byte slice.
+    # The provided allocator is used for backing storage.
+    func init_from_str_with_allocator(allocator: std::allocator, str: []byte) std::result[[big_decimal, std::error]] {
         var decimal = std::optional[[usize]]::EMPTY;
         for i in countof(str) {
             if str[i] == '.' {
@@ -50,14 +74,14 @@ struct big_decimal {
             });
         }
 
-        var result = std::big_integer::init_from_str_with_allocator(allocator, str[0:decimal.value()], 10);
+        var result = std::big_integer::init_from_str(str[0:decimal.value()], 10);
         if result.is_error() {
             return std::result[[big_decimal, std::error]]::init_error(result.error());
         }
         var integer_part = result.value();
         defer integer_part.fini();
 
-        var result = std::big_integer::init_from_str_with_allocator(allocator, str[decimal.value()+1:countof(str)], 10);
+        var result = std::big_integer::init_from_str(str[decimal.value()+1:countof(str)], 10);
         if result.is_error() {
             return std::result[[big_decimal, std::error]]::init_error(result.error());
         }
@@ -105,7 +129,7 @@ struct big_decimal {
         }
 
         # self.*._scale > scale
-        var tmp = std::big_integer::init_from_big_integer_with_allocator(self.*._unscaled._allocator, &std::big_integer::POSITIVE_ONE);
+        var tmp = std::big_integer::init_from_big_integer(&std::big_integer::POSITIVE_ONE);
         defer tmp.fini();
 
         for self.*._scale > scale {
@@ -113,7 +137,7 @@ struct big_decimal {
             self.*._scale = self.*._scale - 1;
         }
 
-        var rem = std::big_integer::init_with_allocator(self.*._unscaled._allocator);
+        var rem = std::big_integer::init();
         defer rem.fini();
 
         std::big_integer::divrem(&self.*._unscaled, &rem, &self.*._unscaled, &tmp);
@@ -140,10 +164,11 @@ struct big_decimal {
             return std::big_integer::compare(&lhs.*._unscaled, &rhs.*._unscaled);
         }
 
-        var tmp_lhs = big_decimal::init_from_big_decimal(lhs.*._unscaled._allocator, lhs);
-        var tmp_rhs = big_decimal::init_from_big_decimal(rhs.*._unscaled._allocator, rhs);
-        tmp_lhs.set_scale(*std::max[[usize]](&tmp_lhs._scale, &tmp_rhs._scale));
-        tmp_rhs.set_scale(*std::max[[usize]](&tmp_lhs._scale, &tmp_rhs._scale));
+        var tmp_lhs = big_decimal::init_from_big_decimal(lhs);
+        var tmp_rhs = big_decimal::init_from_big_decimal(rhs);
+        var tmp_scale = *std::max[[usize]](&tmp_lhs._scale, &tmp_rhs._scale);
+        tmp_lhs.set_scale(tmp_scale);
+        tmp_rhs.set_scale(tmp_scale);
         defer tmp_lhs.fini();
         defer tmp_rhs.fini();
 
@@ -159,19 +184,19 @@ struct big_decimal {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
         ];
 
-        var output = std::vector[[byte]]::init_with_allocator(self.*._unscaled._allocator);
+        var output = std::vector[[byte]]::init();
         defer output.fini();
 
-        var tmp = std::big_integer::init_from_big_integer_with_allocator(self.*._unscaled._allocator, &self.*._unscaled);
+        var tmp = std::big_integer::init_from_big_integer(&self.*._unscaled);
         defer tmp.fini();
         std::big_integer::abs(&tmp, &tmp);
 
         var scale = self.*._scale;
 
         for scale != 0 {
-            var div = std::big_integer::init_with_allocator(self.*._unscaled._allocator);
+            var div = std::big_integer::init();
             defer div.fini();
-            var rem = std::big_integer::init_with_allocator(self.*._unscaled._allocator);
+            var rem = std::big_integer::init();
             defer rem.fini();
             std::big_integer::divrem(&div, &rem, &tmp, &std::big_integer::POSITIVE_TEN);
 
@@ -196,9 +221,9 @@ struct big_decimal {
         }
 
         for not std::eq[[std::big_integer]](&tmp, &std::big_integer::ZERO) {
-            var div = std::big_integer::init_with_allocator(self.*._unscaled._allocator);
+            var div = std::big_integer::init();
             defer div.fini();
-            var rem = std::big_integer::init_with_allocator(self.*._unscaled._allocator);
+            var rem = std::big_integer::init();
             defer rem.fini();
             std::big_integer::divrem(&div, &rem, &tmp, &std::big_integer::POSITIVE_TEN);
 
@@ -246,11 +271,11 @@ struct big_decimal {
     # res scale = max(lhs scale, rhs scale)
     # The result is calculated exactly.
     func add(res: *big_decimal, lhs: *big_decimal, rhs: *big_decimal) void {
-        var tmp_lhs = big_decimal::init(res.*._unscaled._allocator);
+        var tmp_lhs = big_decimal::init();
         defer tmp_lhs.fini();
         big_decimal::assign(&tmp_lhs, lhs);
 
-        var tmp_rhs = big_decimal::init(res.*._unscaled._allocator);
+        var tmp_rhs = big_decimal::init();
         defer tmp_rhs.fini();
         big_decimal::assign(&tmp_rhs, rhs);
 
@@ -270,11 +295,11 @@ struct big_decimal {
     # res scale = max(lhs scale, rhs scale)
     # The result is calculated exactly.
     func sub(res: *big_decimal, lhs: *big_decimal, rhs: *big_decimal) void {
-        var tmp_lhs = big_decimal::init(res.*._unscaled._allocator);
+        var tmp_lhs = big_decimal::init();
         defer tmp_lhs.fini();
         big_decimal::assign(&tmp_lhs, lhs);
 
-        var tmp_rhs = big_decimal::init(res.*._unscaled._allocator);
+        var tmp_rhs = big_decimal::init();
         defer tmp_rhs.fini();
         big_decimal::assign(&tmp_rhs, rhs);
 
@@ -294,11 +319,11 @@ struct big_decimal {
     # res scale = lhs scale + rhs scale
     # The result is calculated exactly.
     func mul(res: *big_decimal, lhs: *big_decimal, rhs: *big_decimal) void {
-        var tmp_lhs = big_decimal::init(res.*._unscaled._allocator);
+        var tmp_lhs = big_decimal::init();
         defer tmp_lhs.fini();
         big_decimal::assign(&tmp_lhs, lhs);
 
-        var tmp_rhs = big_decimal::init(res.*._unscaled._allocator);
+        var tmp_rhs = big_decimal::init();
         defer tmp_rhs.fini();
         big_decimal::assign(&tmp_rhs, rhs);
 
@@ -316,11 +341,11 @@ struct big_decimal {
     # res scale = max(lhs scale, rhs scale) + 3
     # The result is calculated approximately and rounded half up.
     func div(res: *big_decimal, lhs: *big_decimal, rhs: *big_decimal) void {
-        var tmp_lhs = big_decimal::init(res.*._unscaled._allocator);
+        var tmp_lhs = big_decimal::init();
         defer tmp_lhs.fini();
         big_decimal::assign(&tmp_lhs, lhs);
 
-        var tmp_rhs = big_decimal::init(res.*._unscaled._allocator);
+        var tmp_rhs = big_decimal::init();
         defer tmp_rhs.fini();
         big_decimal::assign(&tmp_rhs, rhs);
 
@@ -339,7 +364,7 @@ struct big_decimal {
             std::big_integer::mul(&tmp_lhs._unscaled, &tmp_lhs._unscaled, &std::big_integer::POSITIVE_TEN);
         }
 
-        var rem = std::big_integer::init_with_allocator(res.*._unscaled._allocator);
+        var rem = std::big_integer::init();
         defer rem.fini();
 
         let POSITIVE_FIVE_HUNDRED = (:std::big_integer){
