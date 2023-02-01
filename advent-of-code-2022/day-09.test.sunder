@@ -191,9 +191,10 @@ func main() void {
 
         var argument = parser.argument_value();
         std::print_format_line(
-            std::out(),
-            "invalid argument argument `{}`",
+            std::err(),
+            "invalid argument `{}`",
             (:[]std::formatter)[std::formatter::init[[[]byte]](&argument)]);
+        std::exit(std::EXIT_FAILURE);
      }
 
     var result = std::file::open("day-09.input", std::file::OPEN_READ);
