@@ -108,10 +108,6 @@ def shortest_path(squares: Dict[Position, Square], e: Square, screen = None):
             display(squares, max_x, max_y, screen)
 
 def main(stdscr):
-    parser = ArgumentParser()
-    parser.add_argument('-d', '--display', action='store_true')
-    args = parser.parse_args()
-
     with open("day-12.input") as f:
         input = [s.strip() for s in f.readlines()];
 
@@ -137,8 +133,8 @@ def main(stdscr):
     assert(S is not None)
     assert(E is not None)
 
-    shortest_path(squares, E, stdscr if args.display else None)
-    if args.display:
+    shortest_path(squares, E, stdscr)
+    if stdscr is not None:
         # Accept final keyboard input before quitting.
         stdscr.getch()
 
@@ -149,6 +145,10 @@ def main(stdscr):
     return (S.distance, shortest_start.distance)
 
 if __name__ == "__main__":
-    part1, part2 = curses.wrapper(main)
+    parser = ArgumentParser()
+    parser.add_argument("-d", "--display", action="store_true")
+    args = parser.parse_args()
+
+    part1, part2 = curses.wrapper(main) if args.display else main(None)
     print(f"PART 1: {part1}")
     print(f"PART 2: {part2}")
