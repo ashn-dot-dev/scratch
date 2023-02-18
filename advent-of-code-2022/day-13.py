@@ -50,22 +50,64 @@ def compare(lhs, rhs, debug=False) -> Order:
 
     assert False, "unreachable"
 
-def main(args):
-    with open("day-13.input") as f:
-        input = f.read();
 
+def part1(input, debug=False):
     pairs = [tuple(x.split("\n")) for x in input.split("\n\n")]
     pairs = [(eval(p[0]), eval(p[1])) for p in pairs]
 
     sum = 0
     for i in range(len(pairs)):
-        cmp = compare(*pairs[i], debug=args.debug)
-        if args.debug:
+        cmp = compare(*pairs[i], debug)
+        if debug:
             print(cmp)
         if cmp == Order.INORDER:
             sum += i + 1
 
     print(f"PART 1: {sum}")
+
+def part2(input, debug=False):
+    packets = [eval(p) for p in input.split("\n") if len(p) != 0]
+    packets.append([[2]])
+    packets.append([[6]])
+
+    # Bubble sort the packets. Slow, but simple to implement.
+    for i in range(len(packets)):
+        for j in range(len(packets) - i - 1):
+            cmp = compare(packets[j], packets[j + 1])
+            if cmp == Order.UNORDER:
+                packets[j], packets[j + 1] = packets[j + 1], packets[j]
+
+    # Find the divider packets.
+    def is_divider(packet, num):
+        assert isinstance(packet, list)
+        if len(packet) != 1:
+            return False
+        if not isinstance(packet[0], list):
+            return False
+        if len(packet[0]) != 1:
+            return False
+        return packet[0][0] == num
+
+    divider_2 = None
+    divider_6 = None
+    for i in range(len(packets)):
+        packet = packets[i]
+        if is_divider(packet, 2):
+            assert divider_2 is None
+            divider_2 = i + 1
+        if is_divider(packet, 6):
+            assert divider_6 is None
+            divider_6 = i + 1
+
+    print(f"PART 2: {divider_2 * divider_6}")
+
+
+def main(args):
+    with open("day-13.input") as f:
+        input = f.read();
+
+    part1(input, args.debug)
+    part2(input, args.debug)
 
 if __name__ == "__main__":
     parser = ArgumentParser()
