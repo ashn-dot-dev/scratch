@@ -3,3 +3,6 @@
 *.asm
 
 .mypy_cache/
+
+debug/
+target/
