@@ -41,16 +41,16 @@ def display(squares: Dict[Position, Square], max_x: int, max_y: int, screen):
                 screen.addch(y, x, ascii_lowercase[elevation])
                 continue
             if previous.position.x == position.x - 1 and previous.position.y == position.y:
-                screen.addch(y, x, chr(0xFFE9))
+                screen.addch(y, x, "<")
                 continue
             if previous.position.x == position.x + 1 and previous.position.y == position.y:
-                screen.addch(y, x, chr(0xFFEB))
+                screen.addch(y, x, ">")
                 continue
             if previous.position.x == position.x and previous.position.y == position.y - 1:
-                screen.addch(y, x, chr(0xFFEA))
+                screen.addch(y, x, "^")
                 continue
             if previous.position.x == position.x and previous.position.y == position.y + 1:
-                screen.addch(y, x, chr(0xFFEC))
+                screen.addch(y, x, "v")
                 continue
             assert False, "unreachable"
     screen.refresh()
