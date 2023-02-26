@@ -63,7 +63,6 @@ def shortest_path(squares: Dict[Position, Square], e: Square, screen = None):
     Dijkstra's shortest path algorithm, implemented to find the distance from
     each square in `squares` to the end square `e`.
     """
-    visited: Set[Square] = set()
     unvisited: Set[Square] = {x for x in squares.values()}
 
     def visit(square: Square):
@@ -73,7 +72,6 @@ def shortest_path(squares: Dict[Position, Square], e: Square, screen = None):
                 x.distance = square.distance + 1
                 x.previous = square
         unvisited.discard(square)
-        visited.add(square)
 
     e.distance = 0
     visit(e)
