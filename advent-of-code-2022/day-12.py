@@ -1,6 +1,8 @@
 from argparse import ArgumentParser
-from dataclasses import dataclass
+from cProfile import Profile
+from dataclasses import dataclass, field
 from math import inf
+from pstats import Stats
 from string import ascii_lowercase
 from typing import Dict, List, Optional, Set, Tuple, cast
 import curses
@@ -18,6 +20,7 @@ class Position:
 class Square:
     position: Position
     elevation: int
+    visitable: Set["Square"] = field(default_factory=set)
     # Distance from this square to the end square. None if the end square
     # cannot be reached from this square.
     distance: Optional[int] = None
@@ -58,32 +61,14 @@ def display(squares: Dict[Position, Square], max_x: int, max_y: int, screen):
 def shortest_path(squares: Dict[Position, Square], e: Square, screen = None):
     """
     Dijkstra's shortest path algorithm, implemented to find the distance from
-    each square in `squares` to the end square `e`. Edges from each square to
-    other squares are calculated on the fly via the `candidates` subroutine.
+    each square in `squares` to the end square `e`.
     """
     visited: Set[Square] = set()
     unvisited: Set[Square] = {x for x in squares.values()}
 
-    def neighbors(square: Square) -> Set[Square]:
-        position = square.position
-        adjacent = [
-            Position(position.x - 1, position.y),
-            Position(position.x + 1, position.y),
-            Position(position.x, position.y - 1),
-            Position(position.x, position.y + 1),
-        ]
-        return {squares[p] for p in adjacent if p in squares}
-
-    def candidates(square: Square):
-        position = square.position
-        return {
-            n for n in neighbors(square)
-            if n in unvisited and n.elevation + 1 >= square.elevation
-        }
-
     def visit(square: Square):
         assert(square.distance is not None)
-        for x in candidates(square):
+        for x in filter(lambda s: s in unvisited, square.visitable):
             if x.distance is None:
                 x.distance = square.distance + 1
                 x.previous = square
@@ -113,8 +98,9 @@ def main(stdscr):
 
     S: Optional[Square] = None
     E: Optional[Square] = None
-    squares: Dict[Tuple[int, int], Square] = dict()
+    squares: Dict[Position, Square] = dict()
 
+    # Initialize all squares with a position and elevation.
     for y in range(len(input)):
         for x in range(len(input[y])):
             position = Position(x, y)
@@ -129,6 +115,27 @@ def main(stdscr):
                 squares[position] = E
                 continue
             squares[position] = Square(position, ascii_lowercase.find(input[y][x]))
+
+    # Calculate visitable neighbors for each square.
+    for square in squares.values():
+        def neighbors(square: Square) -> Set[Square]:
+            position = square.position
+            adjacent = [
+                Position(position.x - 1, position.y),
+                Position(position.x + 1, position.y),
+                Position(position.x, position.y - 1),
+                Position(position.x, position.y + 1),
+            ]
+            return {squares[p] for p in adjacent if p in squares}
+
+        def visitable(square: Square):
+            position = square.position
+            return {
+                n for n in neighbors(square)
+                if n.elevation + 1 >= square.elevation
+            }
+
+        square.visitable = visitable(square)
 
     assert(S is not None)
     assert(E is not None)
@@ -147,7 +154,16 @@ def main(stdscr):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-d", "--display", action="store_true")
+    parser.add_argument("-p", "--profile", action="store_true")
     args = parser.parse_args()
+
+    if args.profile:
+        profile = Profile()
+        profile.runcall(main, None)
+        stats = Stats(profile)
+        stats.sort_stats("tottime")
+        stats.print_stats()
+        sys.exit(0)
 
     part1, part2 = curses.wrapper(main) if args.display else main(None)
     print(f"PART 1: {part1}")
