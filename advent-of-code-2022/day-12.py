@@ -20,7 +20,7 @@ class Position:
 class Square:
     position: Position
     elevation: int
-    visitable: Set["Square"] = field(default_factory=set)
+    reachable: Set["Square"] = field(default_factory=set)
     # Distance from this square to the end square. None if the end square
     # cannot be reached from this square.
     distance: Optional[int] = None
@@ -63,15 +63,24 @@ def shortest_path(squares: Dict[Position, Square], e: Square, screen = None):
     Dijkstra's shortest path algorithm, implemented to find the distance from
     each square in `squares` to the end square `e`.
     """
+    # All unvisited squares.
     unvisited: Set[Square] = {x for x in squares.values()}
+    # All unvisited squares that have had their distance updated.
+    #
+    # This set contains redundant information that *could* be calculated purely
+    # from the unvisited set. However the performance gains from caching this
+    # information separately is worth the redundancy cost.
+    visitable: Set[Square] = {x for x in unvisited if x.distance is not None}
 
     def visit(square: Square):
-        assert(square.distance is not None)
-        for x in filter(lambda s: s in unvisited, square.visitable):
+        assert square.distance is not None
+        for x in filter(lambda s: s in unvisited, square.reachable):
             if x.distance is None:
                 x.distance = square.distance + 1
                 x.previous = square
+                visitable.add(x)
         unvisited.discard(square)
+        visitable.discard(square)
 
     e.distance = 0
     visit(e)
@@ -80,10 +89,7 @@ def shortest_path(squares: Dict[Position, Square], e: Square, screen = None):
     max_y = max(map(lambda position: position.y, squares.keys()))
 
     while True:
-        ordered = sorted(
-            {x for x in unvisited if x.distance is not None},
-            key=lambda x: cast(int, x.distance)
-        )
+        ordered = sorted(visitable, key=lambda x: cast(int, x.distance))
         if len(ordered) == 0:
             return # no more visitable squares
         visit(ordered[0])
@@ -114,7 +120,7 @@ def main(stdscr):
                 continue
             squares[position] = Square(position, ascii_lowercase.find(input[y][x]))
 
-    # Calculate visitable neighbors for each square.
+    # Calculate reachable neighbors for each square.
     for square in squares.values():
         def neighbors(square: Square) -> Set[Square]:
             position = square.position
@@ -126,14 +132,14 @@ def main(stdscr):
             ]
             return {squares[p] for p in adjacent if p in squares}
 
-        def visitable(square: Square):
+        def reachable(square: Square):
             position = square.position
             return {
                 n for n in neighbors(square)
                 if n.elevation + 1 >= square.elevation
             }
 
-        square.visitable = visitable(square)
+        square.reachable = reachable(square)
 
     assert(S is not None)
     assert(E is not None)
