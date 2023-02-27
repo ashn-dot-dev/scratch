@@ -4,17 +4,13 @@ from dataclasses import dataclass, field
 from math import inf
 from pstats import Stats
 from string import ascii_lowercase
-from typing import Dict, List, Optional, Set, Tuple, cast
+from typing import Dict, List, NamedTuple, Optional, Set, cast
 import curses
 import sys
 
-@dataclass
-class Position:
+class Position(NamedTuple):
     x: int
     y: int
-
-    def __hash__(self):
-        return hash((self.x, self.y))
 
 @dataclass
 class Square:
