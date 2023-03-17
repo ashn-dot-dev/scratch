@@ -1,0 +1,294 @@
+import "c";
+import "raylib-sunder";
+import "std";
+
+let WINDOW_W: sint = 800;
+let WINDOW_H: sint = 600;
+let TIMESTEP = 1.0f64 / FPS;
+let FPS: f64 = 60.0f64;
+
+struct paddle {
+    var position: Vector2;
+
+    let W = WINDOW_W / 60;
+    let H = WINDOW_W / 6;
+    let SPEED = 10.0f32;
+}
+
+struct ball {
+    var position: Vector2;
+    var velocity: Vector2;
+    var collision: bool;
+
+    let SIDE = paddle::W;
+    let SPEED = 8.0f32;
+}
+
+struct state {
+    let SERVE = 0u;
+    let INPLAY = 1u;
+
+    var kind: usize;
+    var serve_velocity: Vector2;
+}
+
+struct context {
+    var state: state;
+    var p1: paddle;
+    var p2: paddle;
+    var ball: ball;
+    var p1_score: usize;
+    var p2_score: usize;
+
+    func init(screen_w: f32, screen_h: f32) context {
+        return (:context){
+            .state = (:state){
+                .kind = state::SERVE,
+                .serve_velocity = (:Vector2){
+                    .x = ball::SPEED,
+                    .y = 0.0f32,
+                },
+            },
+            .p1 = (:paddle){
+                .position = (:Vector2){
+                    .x = (:f32)paddle::W,
+                    .y = screen_h / 2.0f32 - (:f32)paddle::H / 2.0f32,
+                },
+            },
+            .p2 = (:paddle){
+                .position = (:Vector2){
+                    .x = screen_w - 2.0f32 * (:f32)paddle::W,
+                    .y = screen_h / 2.0f32 - (:f32)paddle::H / 2.0f32,
+                },
+            },
+            .ball = (:ball){
+                .position = (:Vector2) {
+                    .x = screen_w / 2.0f32 - (:f32)ball::SIDE / 2.0f32,
+                    .y = screen_h / 2.0f32 - (:f32)ball::SIDE / 2.0f32,
+                },
+                .velocity = (:Vector2){
+                    .x = 0.0f32,
+                    .y = 0.0f32,
+                },
+                .collision = true,
+            },
+            .p1_score = 0,
+            .p2_score = 0,
+        };
+    }
+}
+
+func update(ctx: *context) void {
+    var screen_w = GetScreenWidth();
+    var screen_h = GetScreenHeight();
+    # Some systems (e.g. Ubuntu WSL on Windows 10) ignore the false window
+    # resizable property. Verify that the screen dimensions match the expected
+    # window configuration.
+    var resized = screen_w != WINDOW_W or screen_h != WINDOW_H;
+    if resized {
+        std::print_line(std::err(), "Window was unexpectedly resized! Exiting...");
+        std::exit(1);
+    }
+
+    if IsKeyDown(KEY_A) {
+        ctx.*.p1.position.y = ctx.*.p1.position.y - paddle::SPEED;
+    }
+    if IsKeyDown(KEY_Z) {
+        ctx.*.p1.position.y = ctx.*.p1.position.y + paddle::SPEED;
+    }
+    if ctx.*.p1.position.y < 0.0f32 {
+        ctx.*.p1.position.y = 0.0f32;
+    }
+    if ctx.*.p1.position.y > (:f32)(screen_h - paddle::H) {
+        ctx.*.p1.position.y = (:f32)(screen_h - paddle::H);
+    }
+
+    if IsKeyDown(KEY_UP) or IsKeyDown(KEY_K) {
+        ctx.*.p2.position.y = ctx.*.p2.position.y - paddle::SPEED;
+    }
+    if IsKeyDown(KEY_DOWN) or IsKeyDown(KEY_J) {
+        ctx.*.p2.position.y = ctx.*.p2.position.y + paddle::SPEED;
+    }
+    if ctx.*.p2.position.y < 0.0f32 {
+        ctx.*.p2.position.y = 0.0f32;
+    }
+    if ctx.*.p2.position.y > (:f32)(screen_h - paddle::H) {
+        ctx.*.p2.position.y = (:f32)(screen_h - paddle::H);
+    }
+
+    if ctx.*.state.kind == state::SERVE {
+        if not IsKeyDown(KEY_SPACE) and not IsKeyDown(KEY_ENTER) {
+            return;
+        }
+        ctx.*.ball.velocity = ctx.*.state.serve_velocity;
+        ctx.*.state.kind = state::INPLAY;
+    }
+
+    ctx.*.ball.position.x = ctx.*.ball.position.x + ctx.*.ball.velocity.x;
+    ctx.*.ball.position.y = ctx.*.ball.position.y + ctx.*.ball.velocity.y;
+    var ball_rect = (:Rectangle){
+        .x = ctx.*.ball.position.x,
+        .y = ctx.*.ball.position.y,
+        .width = (:f32)ball::SIDE,
+        .height = (:f32)ball::SIDE,
+    };
+
+    var rebound = f32::degrees_to_radians(30.0f32);
+
+    var p1_rect = (:Rectangle){
+        .x = ctx.*.p1.position.x,
+        .y = ctx.*.p1.position.y,
+        .width = (:f32)paddle::W,
+        .height = (:f32)paddle::H,
+    };
+    if ctx.*.ball.collision and CheckCollisionRecs(ball_rect, p1_rect) {
+        var intersect = p1_rect.center().y - ball_rect.center().y;
+        var normalized = intersect / ((:f32)paddle::H / 2.0f32);
+        var angle = normalized * rebound;
+        ctx.*.ball.velocity.x = ball::SPEED * f32::cos(angle) * 1.0f32;
+        ctx.*.ball.velocity.y = ball::SPEED * f32::sin(angle) * -1.0f32;
+    }
+
+    var p2_rect = (:Rectangle){
+        .x = ctx.*.p2.position.x,
+        .y = ctx.*.p2.position.y,
+        .width = (:f32)paddle::W,
+        .height = (:f32)paddle::H,
+    };
+    if ctx.*.ball.collision and CheckCollisionRecs(ball_rect, p2_rect) {
+        var intersect = p2_rect.center().y - ball_rect.center().y;
+        var normalized = intersect / ((:f32)paddle::H / 2.0f32);
+        var angle = normalized * rebound;
+        ctx.*.ball.velocity.x = ball::SPEED * f32::cos(angle) * -1.0f32;
+        ctx.*.ball.velocity.y = ball::SPEED * f32::sin(angle) * -1.0f32;
+    }
+
+    ctx.*.ball.collision = not CheckCollisionRecs(ball_rect, p1_rect) and not CheckCollisionRecs(ball_rect, p2_rect);
+
+    if ctx.*.ball.position.y <= 0.0f32 or ctx.*.ball.position.y >= (:f32)(screen_h - ball::SIDE) {
+        ctx.*.ball.velocity.y = -ctx.*.ball.velocity.y;
+    }
+
+    if ctx.*.ball.position.x + (:f32)ball::SIDE < 0.0f32 {
+        ctx.*.ball.position.x = (:f32)screen_w / 2.0f32;
+        ctx.*.ball.position.y = (:f32)screen_h / 2.0f32;
+        ctx.*.ball.velocity = (:Vector2){
+            .x = 0.0f32,
+            .y = 0.0f32,
+        };
+        ctx.*.p2_score = ctx.*.p2_score + 1;
+        ctx.*.state.kind = state::SERVE;
+        ctx.*.state.serve_velocity = (:Vector2){
+            .x = ball::SPEED,
+            .y = 0.0f32,
+        };
+    }
+    if ctx.*.ball.position.x >= (:f32)screen_w {
+        ctx.*.ball.position.x = (:f32)screen_w / 2.0f32;
+        ctx.*.ball.position.y = (:f32)screen_h / 2.0f32;
+        ctx.*.ball.velocity = (:Vector2){
+            .x = 0.0f32,
+            .y = 0.0f32,
+        };
+        ctx.*.p1_score = ctx.*.p1_score + 1;
+        ctx.*.state.kind = state::SERVE;
+        ctx.*.state.serve_velocity = (:Vector2){
+            .x = -ball::SPEED,
+            .y = 0.0f32,
+        };
+    }
+}
+
+func render(ctx: *context) void {
+    BeginDrawing();
+    ClearBackground(BLACK);
+
+    DrawRectangle(
+        (:sint)ctx.*.p1.position.x,
+        (:sint)ctx.*.p1.position.y,
+        paddle::W,
+        paddle::H,
+        WHITE,
+    );
+    DrawRectangle(
+        (:sint)ctx.*.p2.position.x,
+        (:sint)ctx.*.p2.position.y,
+        paddle::W,
+        paddle::H,
+        WHITE,
+    );
+    DrawRectangle(
+        (:sint)ctx.*.ball.position.x,
+        (:sint)ctx.*.ball.position.y,
+        ball::SIDE,
+        ball::SIDE,
+        WHITE,
+    );
+
+    DrawFPS(2, 2);
+
+    var screen_w = GetScreenWidth();
+    var screen_h = GetScreenHeight();
+
+    let SCORE_OFFSET_X: sint = 50;
+    let SCORE_OFFSET_Y: sint = 10;
+    let font_size: sint = 80;
+    var text = std::string::init_from_format(
+        "{}\0",
+        (:[]std::formatter)[std::formatter::init[[usize]](&ctx.*.p1_score)]);
+    defer text.fini();
+    var size = MeasureText(text.start(), font_size);
+    DrawText(
+        text.start(),
+        (:sint)((:f32)screen_w * 0.5f32) - size - SCORE_OFFSET_X,
+        SCORE_OFFSET_Y,
+        font_size,
+        WHITE,
+    );
+    var text = std::string::init_from_format(
+        "{}\0",
+        (:[]std::formatter)[std::formatter::init[[usize]](&ctx.*.p2_score)]);
+    defer text.fini();
+    DrawText(
+        text.start(),
+        (:sint)((:f32)screen_w * 0.5f32) + SCORE_OFFSET_X,
+        SCORE_OFFSET_Y,
+        font_size,
+        WHITE,
+    );
+
+    if ctx.*.state.kind == state::SERVE {
+        let font_size: sint = 64;
+        let text = startof("PRESS SPACE");
+        var size = MeasureTextEx(GetFontDefault(), text, (:f32)font_size, 1.0f32);
+        DrawText(
+            text,
+            (:sint)((:f32)screen_w * 0.5f32 - (:f32)size.x * 0.5f32),
+            (:sint)((:f32)screen_h * 0.5f32 - (:f32)size.y),
+            font_size,
+            WHITE,
+        );
+    }
+
+    EndDrawing();
+}
+
+func main() void {
+    InitWindow(WINDOW_W, WINDOW_H, startof("Pong"));
+    defer CloseWindow();
+    SetTargetFPS((:sint)FPS);
+
+    var ctx = context::init((:f32)GetScreenWidth(), (:f32)GetScreenHeight());
+
+    for not WindowShouldClose() {
+        update(&ctx);
+        render(&ctx);
+    }
+}
+
+extend Rectangle func center(self: *Rectangle) Vector2 {
+    return (:Vector2){
+        .x = self.*.x + self.*.width * 0.5f32,
+        .y = self.*.y + self.*.height * 0.5f32,
+    };
+}
