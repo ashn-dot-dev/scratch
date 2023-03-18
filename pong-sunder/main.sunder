@@ -4,8 +4,8 @@ import "std";
 
 let WINDOW_W: sint = 800;
 let WINDOW_H: sint = 600;
-let TIMESTEP = 1.0f64 / FPS;
-let FPS: f64 = 60.0f64;
+let TIMESTEP = 1.0 / FPS;
+let FPS: f64 = 60.0;
 
 struct paddle {
     var position: Vector2;
@@ -46,29 +46,29 @@ struct context {
                 .kind = state::SERVE,
                 .serve_velocity = (:Vector2){
                     .x = ball::SPEED,
-                    .y = 0.0f32,
+                    .y = 0.0,
                 },
             },
             .p1 = (:paddle){
                 .position = (:Vector2){
                     .x = (:f32)paddle::W,
-                    .y = screen_h / 2.0f32 - (:f32)paddle::H / 2.0f32,
+                    .y = screen_h / 2.0 - (:f32)paddle::H / 2.0,
                 },
             },
             .p2 = (:paddle){
                 .position = (:Vector2){
-                    .x = screen_w - 2.0f32 * (:f32)paddle::W,
-                    .y = screen_h / 2.0f32 - (:f32)paddle::H / 2.0f32,
+                    .x = screen_w - 2.0 * (:f32)paddle::W,
+                    .y = screen_h / 2.0 - (:f32)paddle::H / 2.0,
                 },
             },
             .ball = (:ball){
                 .position = (:Vector2) {
-                    .x = screen_w / 2.0f32 - (:f32)ball::SIDE / 2.0f32,
-                    .y = screen_h / 2.0f32 - (:f32)ball::SIDE / 2.0f32,
+                    .x = screen_w / 2.0 - (:f32)ball::SIDE / 2.0,
+                    .y = screen_h / 2.0 - (:f32)ball::SIDE / 2.0,
                 },
                 .velocity = (:Vector2){
-                    .x = 0.0f32,
-                    .y = 0.0f32,
+                    .x = 0.0,
+                    .y = 0.0,
                 },
                 .collision = true,
             },
@@ -96,8 +96,8 @@ func update(ctx: *context) void {
     if IsKeyDown(KEY_Z) {
         ctx.*.p1.position.y = ctx.*.p1.position.y + paddle::SPEED;
     }
-    if ctx.*.p1.position.y < 0.0f32 {
-        ctx.*.p1.position.y = 0.0f32;
+    if ctx.*.p1.position.y < 0.0 {
+        ctx.*.p1.position.y = 0.0;
     }
     if ctx.*.p1.position.y > (:f32)(screen_h - paddle::H) {
         ctx.*.p1.position.y = (:f32)(screen_h - paddle::H);
@@ -109,8 +109,8 @@ func update(ctx: *context) void {
     if IsKeyDown(KEY_DOWN) or IsKeyDown(KEY_J) {
         ctx.*.p2.position.y = ctx.*.p2.position.y + paddle::SPEED;
     }
-    if ctx.*.p2.position.y < 0.0f32 {
-        ctx.*.p2.position.y = 0.0f32;
+    if ctx.*.p2.position.y < 0.0 {
+        ctx.*.p2.position.y = 0.0;
     }
     if ctx.*.p2.position.y > (:f32)(screen_h - paddle::H) {
         ctx.*.p2.position.y = (:f32)(screen_h - paddle::H);
@@ -143,10 +143,10 @@ func update(ctx: *context) void {
     };
     if ctx.*.ball.collision and CheckCollisionRecs(ball_rect, p1_rect) {
         var intersect = p1_rect.center().y - ball_rect.center().y;
-        var normalized = intersect / ((:f32)paddle::H / 2.0f32);
+        var normalized = intersect / ((:f32)paddle::H / 2.0);
         var angle = normalized * rebound;
-        ctx.*.ball.velocity.x = ball::SPEED * f32::cos(angle) * 1.0f32;
-        ctx.*.ball.velocity.y = ball::SPEED * f32::sin(angle) * -1.0f32;
+        ctx.*.ball.velocity.x = ball::SPEED * f32::cos(angle) * 1.0;
+        ctx.*.ball.velocity.y = ball::SPEED * f32::sin(angle) * -1.0;
     }
 
     var p2_rect = (:Rectangle){
@@ -157,44 +157,44 @@ func update(ctx: *context) void {
     };
     if ctx.*.ball.collision and CheckCollisionRecs(ball_rect, p2_rect) {
         var intersect = p2_rect.center().y - ball_rect.center().y;
-        var normalized = intersect / ((:f32)paddle::H / 2.0f32);
+        var normalized = intersect / ((:f32)paddle::H / 2.0);
         var angle = normalized * rebound;
-        ctx.*.ball.velocity.x = ball::SPEED * f32::cos(angle) * -1.0f32;
-        ctx.*.ball.velocity.y = ball::SPEED * f32::sin(angle) * -1.0f32;
+        ctx.*.ball.velocity.x = ball::SPEED * f32::cos(angle) * -1.0;
+        ctx.*.ball.velocity.y = ball::SPEED * f32::sin(angle) * -1.0;
     }
 
     ctx.*.ball.collision = not CheckCollisionRecs(ball_rect, p1_rect) and not CheckCollisionRecs(ball_rect, p2_rect);
 
-    if ctx.*.ball.position.y <= 0.0f32 or ctx.*.ball.position.y >= (:f32)(screen_h - ball::SIDE) {
+    if ctx.*.ball.position.y <= 0.0 or ctx.*.ball.position.y >= (:f32)(screen_h - ball::SIDE) {
         ctx.*.ball.velocity.y = -ctx.*.ball.velocity.y;
     }
 
-    if ctx.*.ball.position.x + (:f32)ball::SIDE < 0.0f32 {
-        ctx.*.ball.position.x = (:f32)screen_w / 2.0f32;
-        ctx.*.ball.position.y = (:f32)screen_h / 2.0f32;
+    if ctx.*.ball.position.x + (:f32)ball::SIDE < 0.0 {
+        ctx.*.ball.position.x = (:f32)screen_w / 2.0;
+        ctx.*.ball.position.y = (:f32)screen_h / 2.0;
         ctx.*.ball.velocity = (:Vector2){
-            .x = 0.0f32,
-            .y = 0.0f32,
+            .x = 0.0,
+            .y = 0.0,
         };
         ctx.*.p2_score = ctx.*.p2_score + 1;
         ctx.*.state.kind = state::SERVE;
         ctx.*.state.serve_velocity = (:Vector2){
             .x = ball::SPEED,
-            .y = 0.0f32,
+            .y = 0.0,
         };
     }
     if ctx.*.ball.position.x >= (:f32)screen_w {
-        ctx.*.ball.position.x = (:f32)screen_w / 2.0f32;
-        ctx.*.ball.position.y = (:f32)screen_h / 2.0f32;
+        ctx.*.ball.position.x = (:f32)screen_w / 2.0;
+        ctx.*.ball.position.y = (:f32)screen_h / 2.0;
         ctx.*.ball.velocity = (:Vector2){
-            .x = 0.0f32,
-            .y = 0.0f32,
+            .x = 0.0,
+            .y = 0.0,
         };
         ctx.*.p1_score = ctx.*.p1_score + 1;
         ctx.*.state.kind = state::SERVE;
         ctx.*.state.serve_velocity = (:Vector2){
             .x = -ball::SPEED,
-            .y = 0.0f32,
+            .y = 0.0,
         };
     }
 }
@@ -240,7 +240,7 @@ func render(ctx: *context) void {
     var size = MeasureText(text.start(), font_size);
     DrawText(
         text.start(),
-        (:sint)((:f32)screen_w * 0.5f32) - size - SCORE_OFFSET_X,
+        (:sint)((:f32)screen_w * 0.5) - size - SCORE_OFFSET_X,
         SCORE_OFFSET_Y,
         font_size,
         WHITE,
@@ -251,20 +251,21 @@ func render(ctx: *context) void {
     defer text.fini();
     DrawText(
         text.start(),
-        (:sint)((:f32)screen_w * 0.5f32) + SCORE_OFFSET_X,
+        (:sint)((:f32)screen_w * 0.5) + SCORE_OFFSET_X,
         SCORE_OFFSET_Y,
         font_size,
         WHITE,
     );
 
+    let PRESS_SPACE_OFFSET_Y = 15.0f32;
     if ctx.*.state.kind == state::SERVE {
-        let font_size: sint = 64;
+        let font_size: sint = 48;
         let text = startof("PRESS SPACE");
         var size = MeasureTextEx(GetFontDefault(), text, (:f32)font_size, 1.0f32);
         DrawText(
             text,
-            (:sint)((:f32)screen_w * 0.5f32 - (:f32)size.x * 0.5f32),
-            (:sint)((:f32)screen_h * 0.5f32 - (:f32)size.y),
+            (:sint)((:f32)screen_w * 0.5 - (:f32)size.x * 0.5),
+            (:sint)((:f32)screen_h * 0.5 - (:f32)size.y - PRESS_SPACE_OFFSET_Y),
             font_size,
             WHITE,
         );
@@ -288,7 +289,7 @@ func main() void {
 
 extend Rectangle func center(self: *Rectangle) Vector2 {
     return (:Vector2){
-        .x = self.*.x + self.*.width * 0.5f32,
-        .y = self.*.y + self.*.height * 0.5f32,
+        .x = self.*.x + self.*.width * 0.5,
+        .y = self.*.y + self.*.height * 0.5,
     };
 }
