@@ -19,7 +19,7 @@ if eval "${INIT}"; then
     if [ ! -d raylib ]; then
         git clone https://github.com/ashn-dot-dev/raylib.git raylib
     fi
-    (cd raylib && git pull && cd src && make PLATFORM=PLATFORM_DESKTOP)
+    (cd raylib && git fetch origin && git checkout 4.5.0 && cd src && make PLATFORM=PLATFORM_DESKTOP)
 
     if [ ! -d raylib-sunder ]; then
         git clone https://github.com/ashn-dot-dev/raylib-sunder.git raylib-sunder
