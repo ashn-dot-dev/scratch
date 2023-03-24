@@ -234,23 +234,23 @@ func render(ctx: *context) void {
     let SCORE_OFFSET_Y: sint = 10;
     let font_size: sint = 80;
     var text = std::string::init_from_format(
-        "{}\0",
+        "{}",
         (:[]std::formatter)[std::formatter::init[[usize]](&ctx.*.p1_score)]);
     defer text.fini();
     var size = MeasureText(text.start(), font_size);
     DrawText(
-        text.start(),
+        text.cstr(),
         (:sint)((:f32)screen_w * 0.5) - size - SCORE_OFFSET_X,
         SCORE_OFFSET_Y,
         font_size,
         WHITE,
     );
     var text = std::string::init_from_format(
-        "{}\0",
+        "{}",
         (:[]std::formatter)[std::formatter::init[[usize]](&ctx.*.p2_score)]);
     defer text.fini();
     DrawText(
-        text.start(),
+        text.cstr(),
         (:sint)((:f32)screen_w * 0.5) + SCORE_OFFSET_X,
         SCORE_OFFSET_Y,
         font_size,
