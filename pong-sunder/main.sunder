@@ -1,5 +1,5 @@
 import "c";
-import "raylib-sunder";
+import "raylib";
 import "std";
 
 let WINDOW_W: sint = 800;
