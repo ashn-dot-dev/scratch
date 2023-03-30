@@ -21,7 +21,7 @@ func main() void {
         var fields = std::str::split(line, "x");
         defer std::slice[[[]byte]]::delete(fields);
 
-        std::assert(countof(fields) == 3);
+        assert countof(fields) == 3;
         var L = std::umax::init_from_str(fields[0], 10);
         var L = L.value();
         var W = std::umax::init_from_str(fields[1], 10);

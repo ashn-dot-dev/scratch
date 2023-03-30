@@ -9,7 +9,7 @@ struct assignment {
         var allocator = std::linear_allocator::init(buf[0:countof(buf)]);
         var allocator = std::allocator::init[[std::linear_allocator]](&allocator);
         var sections = std::str::split_with_allocator(allocator, str, "-");
-        std::assert(countof(sections) == 2);
+        assert countof(sections) == 2;
 
         var lo = usize::init_from_str(sections[0], 10);
         var hi = usize::init_from_str(sections[1], 10);
@@ -38,7 +38,7 @@ func main() void {
         var assignments = std::str::split(line, ",");
         defer std::slice[[[]byte]]::delete(assignments);
 
-        std::assert(countof(assignments) == 2);
+        assert countof(assignments) == 2;
         var elf_a = assignment::init_from_str(assignments[0]);
         var elf_b = assignment::init_from_str(assignments[1]);
 

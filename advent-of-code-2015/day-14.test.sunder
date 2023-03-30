@@ -39,7 +39,7 @@ struct reindeer {
 
     # Advance by one second.
     func tick(self: *reindeer) void {
-        std::assert(self.*.timer != 0);
+        assert self.*.timer != 0;
         self.*.timer = self.*.timer - 1;
 
         if self.*.state == reindeer::STATE_FLYING {

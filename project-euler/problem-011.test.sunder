@@ -55,7 +55,7 @@ let grid = (:[20][20]usize)[
 ];
 
 func main() void {
-    std::assert(countof(grid) == countof(grid[0]));
+    assert countof(grid) == countof(grid[0]);
     let N = countof(grid);
 
     #  U   +-> +x (L to R)

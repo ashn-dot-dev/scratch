@@ -18,7 +18,7 @@ func find_marker(str: []byte, ndistinct: usize) usize {
         }
     }
 
-    std::assert(false); # unreachable
+    assert false ; # unreachable
     return 0;
 }
 

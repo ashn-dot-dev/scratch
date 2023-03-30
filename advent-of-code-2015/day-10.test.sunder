@@ -16,7 +16,7 @@ func encode(data: []byte) std::vector[[byte]] {
     }
 
     var length = countof(data) - start;
-    std::assert(length >= 1 and length < 10);
+    assert length >= 1 and length < 10;
     output.push((:byte)('0' + (:u8)length));
     output.push(data[start]);
 

@@ -7,7 +7,7 @@ import "std";
 #
 # [1]: https://en.wikipedia.org/wiki/Integer_square_root
 func isqrt[[T]](n: T) T {
-    std::assert(n >= 0);
+    assert n >= 0;
     var L: T = 0;
     var M: T = 0;
     var R: T = n + 1;

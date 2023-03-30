@@ -7,7 +7,7 @@ func char_to_ssize(char: byte) ssize {
 }
 
 func part1(lines: [][]byte) void {
-    std::assert(countof(lines) == countof(lines[0]));
+    assert countof(lines) == countof(lines[0]);
     var side_length = countof(lines); # Square grid.
 
     var visible = std::slice[[[]bool]]::new(side_length);
@@ -87,7 +87,7 @@ func part1(lines: [][]byte) void {
 }
 
 func part2(lines: [][]byte) void {
-    std::assert(countof(lines) == countof(lines[0]));
+    assert countof(lines) == countof(lines[0]) ;
     var side_length = countof(lines); # Square grid.
 
     var part2_answer = 0u;

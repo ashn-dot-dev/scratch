@@ -9,7 +9,7 @@ func priority(char: byte) usize {
         return ((:usize)char - 'a') + 1;
     }
 
-    std::assert(false); # unreachable
+    assert false; # unreachable
     return std::zeroed[[usize]]();
 }
 
@@ -35,7 +35,7 @@ func main() void {
         defer std::slice[[byte]]::delete(line);
 
         # PART 1
-        std::assert(countof(line) % 2 == 0);
+        assert countof(line) % 2 == 0;
         var count = countof(line);
         var compartment1 = line[0:count/2];
         var compartment2 = line[count/2:count];

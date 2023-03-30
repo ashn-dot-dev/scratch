@@ -413,12 +413,13 @@ func main() void {
     std::print(std::out(), "\n");
 
     # Verify none of these operations leak memory.
-    var iter = std::general_allocator_iterator::init(&std::global_general_allocator);
+    var ga = (:*std::general_allocator)std::global_allocator().object;
+    var iter = std::general_allocator_iterator::init(ga);
     var leaks = 0u;
     for iter.advance() {
         leaks = leaks + 1;
     }
-    std::assert(leaks == 0);
+    assert leaks == 0;
 
     # Finally end the test with a divide by zero error.
     test_div("1.0", "0.0");

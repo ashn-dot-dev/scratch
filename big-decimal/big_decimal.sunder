@@ -204,7 +204,7 @@ struct big_decimal {
                 output.insert(0u, '0');
             }
             elif rem._sign == +1 {
-                std::assert(countof(rem._limbs) == 1);
+                assert countof(rem._limbs) == 1;
                 var digit = DIGITS_TABLE[(:usize)rem._limbs[0]];
                 output.insert(0u, digit);
             }
@@ -231,7 +231,7 @@ struct big_decimal {
                 output.insert(0u, '0');
             }
             elif rem._sign == +1 {
-                std::assert(countof(rem._limbs) == 1);
+                assert countof(rem._limbs) == 1;
                 var digit = DIGITS_TABLE[(:usize)rem._limbs[0]];
                 output.insert(0u, digit);
             }
@@ -286,7 +286,7 @@ struct big_decimal {
             tmp_rhs.set_scale(tmp_lhs._scale);
         }
 
-        std::assert(tmp_lhs._scale == tmp_rhs._scale);
+        assert tmp_lhs._scale == tmp_rhs._scale;
         std::big_integer::add(&res.*._unscaled, &tmp_lhs._unscaled, &tmp_rhs._unscaled);
         res.*._scale = tmp_lhs._scale;
     }
@@ -310,7 +310,7 @@ struct big_decimal {
             tmp_rhs.set_scale(tmp_lhs._scale);
         }
 
-        std::assert(tmp_lhs._scale == tmp_rhs._scale);
+        assert tmp_lhs._scale == tmp_rhs._scale;
         std::big_integer::sub(&res.*._unscaled, &tmp_lhs._unscaled, &tmp_rhs._unscaled);
         res.*._scale = tmp_lhs._scale;
     }
@@ -331,7 +331,7 @@ struct big_decimal {
         tmp_lhs.set_scale(scale);
         tmp_rhs.set_scale(scale);
 
-        std::assert(tmp_lhs._scale == tmp_rhs._scale);
+        assert tmp_lhs._scale == tmp_rhs._scale ;
         std::big_integer::mul(&res.*._unscaled, &tmp_lhs._unscaled, &tmp_rhs._unscaled);
         res.*._scale = scale * 2;
         res.*.set_scale(scale);

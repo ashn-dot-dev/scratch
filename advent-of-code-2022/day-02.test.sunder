@@ -14,13 +14,13 @@ func normalize(choice: byte) usize {
         return (:usize)choice - 'X' + 1;
     }
 
-    std::assert(false); # unreachable
+    assert false; # unreachable
     return 0;
 }
 
 func run_round(opnt_choice_normalized: usize, your_choice_normalized: usize) usize {
-    std::assert(ROCK <= opnt_choice_normalized and opnt_choice_normalized <= SCISSORS);
-    std::assert(ROCK <= your_choice_normalized and your_choice_normalized <= SCISSORS);
+    assert ROCK <= opnt_choice_normalized and opnt_choice_normalized <= SCISSORS;
+    assert ROCK <= your_choice_normalized and your_choice_normalized <= SCISSORS;
 
     if your_choice_normalized == opnt_choice_normalized {
         return your_choice_normalized + 3; # draw
@@ -66,7 +66,7 @@ func run_round_part2(opnt_choice: byte, outcome: byte) usize {
         return run_round(opnt_choice_normalized, ROCK);
     }
 
-    std::assert(outcome == DRAW);
+    assert outcome == DRAW;
     return run_round(opnt_choice_normalized, opnt_choice_normalized);
 }
 
@@ -89,7 +89,7 @@ func main() void {
         var line = optional.value();
         defer std::slice[[byte]]::delete(line);
 
-        std::assert(countof(line) != 0);
+        assert countof(line) != 0;
         part1_total_score = part1_total_score + run_round_part1(line[0], line[2]);
         part2_total_score = part2_total_score + run_round_part2(line[0], line[2]);
     }

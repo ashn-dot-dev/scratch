@@ -16,13 +16,13 @@ func display(visited: *std::hash_map[[position, void]], knots: []position) void 
             var col = (:ssize)j + MIN_X;
             var pos = (:position)[col, row];
 
-            std::assert(countof(knots) != 0);
+            assert countof(knots) != 0;
             if knots[0][x] == col and knots[0][y] == row  {
                 std::print(writer, "H");
                 continue;
             }
 
-            std::assert(countof(knots) <= 10);
+            assert countof(knots) <= 10;
             var wrote_knot = false;
             for k in 1:countof(knots) {
                 if knots[k][x] == col and knots[k][y] == row  {

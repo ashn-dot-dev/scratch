@@ -103,7 +103,7 @@ func main() void {
             continue;
         }
 
-        std::assert(false); # unreachable
+        assert false; # unreachable
     }
 
     var part1_answer = 0u;
