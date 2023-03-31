@@ -1,6 +1,6 @@
 import "std";
 
-func display(visited: *std::hash_map[[position, void]], knots: []position) void {
+func display(visited: *std::hash_set[[position]], knots: []position) void {
     var string = std::string::init();
     var writer = std::writer::init[[std::string]](&string);
 
@@ -57,8 +57,8 @@ func display(visited: *std::hash_map[[position, void]], knots: []position) void 
 }
 
 func run(lines: [][]byte, knots: []position) usize {
-    var visited = std::hash_map[[position, void]]::init();
-    visited.insert(knots[countof(knots) - 1], void::VALUE);
+    var visited = std::hash_set[[position]]::init();
+    visited.insert(knots[countof(knots) - 1]);
 
     if opt_display {
         display(&visited, knots);
@@ -140,7 +140,7 @@ func run(lines: [][]byte, knots: []position) usize {
             }
 
             # Note where the tail was.
-            visited.insert(knots[countof(knots) - 1], void::VALUE);
+            visited.insert(knots[countof(knots) - 1]);
             if opt_display {
                 display(&visited, knots);
             }

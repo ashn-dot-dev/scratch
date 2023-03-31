@@ -22,7 +22,7 @@ func main() void {
 
     var part1_answer = 0u;
     var part2_answer = 0u;
-    var group = std::vector[[std::hash_map[[byte, void]]]]::init();
+    var group = std::vector[[std::hash_set[[byte]]]]::init();
     defer group.fini();
     for true {
         var result = std::read_line(reader);
@@ -51,9 +51,9 @@ func main() void {
         part1_answer = part1_answer + priority(shared.value());
 
         # PART 2
-        var items = std::hash_map[[byte, void]]::init();
+        var items = std::hash_set[[byte]]::init();
         for i in countof(line) {
-            items.insert(line[i], void::VALUE);
+            items.insert(line[i]);
         }
         group.push(items);
         if group.count() % 3 != 0 {

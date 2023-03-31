@@ -26,11 +26,11 @@ func main() void {
     var input = result.value();
     defer std::slice[[byte]]::delete(input);
 
-    var map = std::hash_map[[position, void]]::init();
-    defer map.fini();
+    var set = std::hash_set[[position]]::init();
+    defer set.fini();
 
     var pos = (:position){.x = 0, .y = 0};
-    map.insert(pos, void::VALUE);
+    set.insert(pos);
 
     for i in countof(input) {
         var char = input[i];
@@ -43,23 +43,23 @@ func main() void {
         pos.y = pos.y - (:std::smax)(char == '<');
         pos.y = pos.y + (:std::smax)(char == '>');
 
-        map.insert(pos, void::VALUE);
+        set.insert(pos);
     }
 
-    var houses_visited = map.count();
+    var houses_visited = set.count();
     std::print_format_line(
         std::out(),
         "PART 1: {}",
         (:[]std::formatter)[std::formatter::init[[usize]](&houses_visited)]);
 
-    var map = std::hash_map[[position, void]]::init();
-    defer map.fini();
+    var set = std::hash_set[[position]]::init();
+    defer set.fini();
 
     var pos = (:[]position)[
         (:position){.x = 0, .y = 0},
         (:position){.x = 0, .y = 0}
     ];
-    map.insert(pos[0], void::VALUE); # Same for Santa and Robo-Santa
+    set.insert(pos[0]); # Same for Santa and Robo-Santa
 
     var cur = 0u; # 0 => Santa, 1 => Robo-Santa
     for i in countof(input) {
@@ -73,11 +73,11 @@ func main() void {
         pos[cur].y = pos[cur].y - (:std::smax)(char == '<');
         pos[cur].y = pos[cur].y + (:std::smax)(char == '>');
 
-        map.insert(pos[cur], void::VALUE);
+        set.insert(pos[cur]);
         cur = (cur + 1) % 2;
     }
 
-    var houses_visited = map.count();
+    var houses_visited = set.count();
     std::print_format_line(
         std::out(),
         "PART 2: {}",
