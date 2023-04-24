@@ -1,0 +1,360 @@
+import "c";
+import "oat";
+import "std";
+
+let WINDOW_W: sint = 800;
+let WINDOW_H: sint = 600;
+let TIMESTEP = 1.0 / FPS;
+let FPS: f64 = 60.0;
+
+# Public Pixel Font, version 1.1.
+# Licensed as Creative Commons Zero v1.0 Universal.
+# https://ggbot.itch.io/public-pixel-font
+let public_pixel_ttf = embed("PublicPixel.ttf");
+
+struct vec2f32 {
+    var x: f32;
+    var y: f32;
+}
+
+struct rectf32 {
+    var x: f32;
+    var y: f32;
+    var w: f32;
+    var h: f32;
+
+    func center(self: *rectf32) vec2f32 {
+        return (:vec2f32){
+            .x = self.*.x + self.*.w * 0.5,
+            .y = self.*.y + self.*.h * 0.5,
+        };
+    }
+
+    func collision(a: rectf32, b: rectf32) bool {
+        return (a.x < (b.x + b.w) and (a.x + a.w) > b.x) and
+               (a.y < (b.y + b.h) and (a.y + a.h) > b.y);
+    }
+}
+
+struct paddle {
+    var position: vec2f32;
+
+    let W = WINDOW_W / 60;
+    let H = WINDOW_W / 6;
+    let SPEED = 10.0f32;
+}
+
+struct ball {
+    var position: vec2f32;
+    var velocity: vec2f32;
+    var collision: bool;
+
+    let SIDE = paddle::W;
+    let SPEED = 8.0f32;
+}
+
+struct state {
+    let SERVE = 0u;
+    let INPLAY = 1u;
+
+    var kind: usize;
+    var serve_velocity: vec2f32;
+}
+
+struct context {
+    var state: state;
+    var p1: paddle;
+    var p2: paddle;
+    var ball: ball;
+    var p1_score: usize;
+    var p2_score: usize;
+    var font_score: *oat_font;
+    var font_serve: *oat_font;
+
+    func init(screen_w: f32, screen_h: f32) context {
+        return (:context){
+            .state = (:state){
+                .kind = state::SERVE,
+                .serve_velocity = (:vec2f32){
+                    .x = ball::SPEED,
+                    .y = 0.0,
+                },
+            },
+            .p1 = (:paddle){
+                .position = (:vec2f32){
+                    .x = (:f32)paddle::W,
+                    .y = screen_h / 2.0 - (:f32)paddle::H / 2.0,
+                },
+            },
+            .p2 = (:paddle){
+                .position = (:vec2f32){
+                    .x = screen_w - 2.0 * (:f32)paddle::W,
+                    .y = screen_h / 2.0 - (:f32)paddle::H / 2.0,
+                },
+            },
+            .ball = (:ball){
+                .position = (:vec2f32) {
+                    .x = screen_w / 2.0 - (:f32)ball::SIDE / 2.0,
+                    .y = screen_h / 2.0 - (:f32)ball::SIDE / 2.0,
+                },
+                .velocity = (:vec2f32){
+                    .x = 0.0,
+                    .y = 0.0,
+                },
+                .collision = true,
+            },
+            .p1_score = 0,
+            .p2_score = 0,
+            .font_score = oat_font_new_ttf(startof(public_pixel_ttf), countof(public_pixel_ttf), 80),
+            .font_serve = oat_font_new_ttf(startof(public_pixel_ttf), countof(public_pixel_ttf), 48),
+        };
+    }
+
+    func fini(self: *context) void {
+        oat_font_del(self.*.font_score);
+        oat_font_del(self.*.font_serve);
+    }
+}
+
+func update(ctx: *context) void {
+    var screen_w = oat_screen_get_w();
+    var screen_h = oat_screen_get_h();
+    # Some systems (e.g. Ubuntu WSL on Windows 10) ignore the false window
+    # resizable property. Verify that the screen dimensions match the expected
+    # window configuration.
+    var resized = screen_w != WINDOW_W or screen_h != WINDOW_H;
+    if resized {
+        std::print_line(std::err(), "Window was unexpectedly resized! Exiting...");
+        std::exit(1);
+    }
+
+    if (oat_key_is_pressed(oat_key_escape())) {
+        oat_set_quit_requested(true);
+    }
+
+    if oat_key_is_down(oat_key_a()) {
+        ctx.*.p1.position.y = ctx.*.p1.position.y - paddle::SPEED;
+    }
+    if oat_key_is_down(oat_key_z()) {
+        ctx.*.p1.position.y = ctx.*.p1.position.y + paddle::SPEED;
+    }
+    if ctx.*.p1.position.y < 0.0 {
+        ctx.*.p1.position.y = 0.0;
+    }
+    if ctx.*.p1.position.y > (:f32)(screen_h - paddle::H) {
+        ctx.*.p1.position.y = (:f32)(screen_h - paddle::H);
+    }
+
+    if oat_key_is_down(oat_key_uarrow()) or oat_key_is_down(oat_key_k()) {
+        ctx.*.p2.position.y = ctx.*.p2.position.y - paddle::SPEED;
+    }
+    if oat_key_is_down(oat_key_darrow()) or oat_key_is_down(oat_key_j()) {
+        ctx.*.p2.position.y = ctx.*.p2.position.y + paddle::SPEED;
+    }
+    if ctx.*.p2.position.y < 0.0 {
+        ctx.*.p2.position.y = 0.0;
+    }
+    if ctx.*.p2.position.y > (:f32)(screen_h - paddle::H) {
+        ctx.*.p2.position.y = (:f32)(screen_h - paddle::H);
+    }
+
+    if ctx.*.state.kind == state::SERVE {
+        if not oat_key_is_down(oat_key_space()) and not oat_key_is_down(oat_key_enter()) {
+            return;
+        }
+        ctx.*.ball.velocity = ctx.*.state.serve_velocity;
+        ctx.*.state.kind = state::INPLAY;
+    }
+
+    ctx.*.ball.position.x = ctx.*.ball.position.x + ctx.*.ball.velocity.x;
+    ctx.*.ball.position.y = ctx.*.ball.position.y + ctx.*.ball.velocity.y;
+    var ball_rect = (:rectf32){
+        .x = ctx.*.ball.position.x,
+        .y = ctx.*.ball.position.y,
+        .w = (:f32)ball::SIDE,
+        .h = (:f32)ball::SIDE,
+    };
+
+    var rebound = f32::degrees_to_radians(30.0f32);
+
+    var p1_rect = (:rectf32){
+        .x = ctx.*.p1.position.x,
+        .y = ctx.*.p1.position.y,
+        .w = (:f32)paddle::W,
+        .h = (:f32)paddle::H,
+    };
+    if ctx.*.ball.collision and rectf32::collision(ball_rect, p1_rect) {
+        var intersect = p1_rect.center().y - ball_rect.center().y;
+        var normalized = intersect / ((:f32)paddle::H / 2.0);
+        var angle = normalized * rebound;
+        ctx.*.ball.velocity.x = ball::SPEED * f32::cos(angle) * 1.0;
+        ctx.*.ball.velocity.y = ball::SPEED * f32::sin(angle) * -1.0;
+    }
+
+    var p2_rect = (:rectf32){
+        .x = ctx.*.p2.position.x,
+        .y = ctx.*.p2.position.y,
+        .w = (:f32)paddle::W,
+        .h = (:f32)paddle::H,
+    };
+    if ctx.*.ball.collision and rectf32::collision(ball_rect, p2_rect) {
+        var intersect = p2_rect.center().y - ball_rect.center().y;
+        var normalized = intersect / ((:f32)paddle::H / 2.0);
+        var angle = normalized * rebound;
+        ctx.*.ball.velocity.x = ball::SPEED * f32::cos(angle) * -1.0;
+        ctx.*.ball.velocity.y = ball::SPEED * f32::sin(angle) * -1.0;
+    }
+
+    ctx.*.ball.collision = not rectf32::collision(ball_rect, p1_rect) and not rectf32::collision(ball_rect, p2_rect);
+
+    if ctx.*.ball.position.y <= 0.0 or ctx.*.ball.position.y >= (:f32)(screen_h - ball::SIDE) {
+        ctx.*.ball.velocity.y = -ctx.*.ball.velocity.y;
+    }
+
+    if ctx.*.ball.position.x + (:f32)ball::SIDE < 0.0 {
+        ctx.*.ball.position.x = (:f32)screen_w / 2.0;
+        ctx.*.ball.position.y = (:f32)screen_h / 2.0;
+        ctx.*.ball.velocity = (:vec2f32){
+            .x = 0.0,
+            .y = 0.0,
+        };
+        ctx.*.p2_score = ctx.*.p2_score + 1;
+        ctx.*.state.kind = state::SERVE;
+        ctx.*.state.serve_velocity = (:vec2f32){
+            .x = ball::SPEED,
+            .y = 0.0,
+        };
+    }
+    if ctx.*.ball.position.x >= (:f32)screen_w {
+        ctx.*.ball.position.x = (:f32)screen_w / 2.0;
+        ctx.*.ball.position.y = (:f32)screen_h / 2.0;
+        ctx.*.ball.velocity = (:vec2f32){
+            .x = 0.0,
+            .y = 0.0,
+        };
+        ctx.*.p1_score = ctx.*.p1_score + 1;
+        ctx.*.state.kind = state::SERVE;
+        ctx.*.state.serve_velocity = (:vec2f32){
+            .x = -ball::SPEED,
+            .y = 0.0,
+        };
+    }
+}
+
+func render(ctx: *context) void {
+    oat_draw_clear(0x00, 0x00, 0x00);
+
+    oat_draw_rectangle(
+        (:sint)ctx.*.p1.position.x,
+        (:sint)ctx.*.p1.position.y,
+        paddle::W,
+        paddle::H,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF
+    );
+    oat_draw_rectangle(
+        (:sint)ctx.*.p2.position.x,
+        (:sint)ctx.*.p2.position.y,
+        paddle::W,
+        paddle::H,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF
+    );
+    oat_draw_rectangle(
+        (:sint)ctx.*.ball.position.x,
+        (:sint)ctx.*.ball.position.y,
+        ball::SIDE,
+        ball::SIDE,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF
+    );
+
+    var screen_w = oat_screen_get_w();
+    var screen_h = oat_screen_get_h();
+
+    let SCORE_OFFSET_X: sint = 50;
+    let SCORE_OFFSET_Y: sint = 10;
+    var text = std::string::init_from_format(
+        "{}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&ctx.*.p1_score)]);
+    defer text.fini();
+    var text_w: sint = uninit;
+    var text_h: sint = uninit;
+    oat_measure_text(text.cstr(), ctx.*.font_score, &text_w, &text_h);
+    oat_draw_text(
+        text.cstr(),
+        (:sint)((:f32)screen_w * 0.5) - text_w - SCORE_OFFSET_X,
+        SCORE_OFFSET_Y,
+        ctx.*.font_score,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF
+    );
+    var text = std::string::init_from_format(
+        "{}",
+        (:[]std::formatter)[std::formatter::init[[usize]](&ctx.*.p2_score)]);
+    defer text.fini();
+    var text_w: sint = uninit;
+    var text_h: sint = uninit;
+    oat_measure_text(text.cstr(), ctx.*.font_score, &text_w, &text_h);
+    oat_draw_text(
+        text.cstr(),
+        (:sint)((:f32)screen_w * 0.5) + SCORE_OFFSET_X,
+        SCORE_OFFSET_Y,
+        ctx.*.font_score,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF
+    );
+
+    let PRESS_SPACE_OFFSET_Y = 15.0f32;
+    if ctx.*.state.kind == state::SERVE {
+        let text = startof("PRESS SPACE");
+        var text_w: sint = uninit;
+        var text_h: sint = uninit;
+        oat_measure_text(text, ctx.*.font_serve, &text_w, &text_h);
+        oat_draw_text(
+            text,
+            (:sint)((:f32)screen_w * 0.5 - (:f32)text_w * 0.5),
+            (:sint)((:f32)screen_h * 0.5 - (:f32)text_h - PRESS_SPACE_OFFSET_Y),
+            ctx.*.font_serve,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF
+        );
+    }
+
+    oat_end_frame();
+}
+
+func main() void {
+    oat_init(WINDOW_W, WINDOW_H, startof("Pong"));
+    defer oat_fini();
+
+    var ctx = context::init((:f32)oat_screen_get_w(), (:f32)oat_screen_get_h());
+    defer ctx.fini();
+
+    var time: double = 0.0;
+    var prev: double = 0.0;
+    for not oat_get_quit_requested() {
+        var now: double = oat_now();
+        time = time + (now - prev);
+        prev = now;
+        if time <= TIMESTEP {
+            continue;
+        }
+        time = time - TIMESTEP;
+
+        update(&ctx);
+        render(&ctx);
+    }
+}
