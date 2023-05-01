@@ -1,6 +1,7 @@
 *.out
 *.o
 *.asm
+*.tmp.*
 
 .mypy_cache/
 

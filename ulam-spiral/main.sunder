@@ -1,0 +1,173 @@
+import "c";
+import "oat";
+import "std";
+
+let PIXELS_W: sint = 320;
+let PIXELS_H: sint = 180;
+let PIXELS_SCALE: sint = 6;
+let WINDOW_W = PIXELS_W * PIXELS_SCALE;
+let WINDOW_H = PIXELS_H * PIXELS_SCALE;
+let TIMESTEP = 1.0 / FPS;
+let FPS: f64 = 60.0;
+
+struct ulam {
+    var pixels: *oat_sprite;
+    var pixel_idx: usize;
+    var steps_cur: sint;
+    var steps_tot: sint;
+    var x: sint;
+    var y: sint;
+    var dx: sint;
+    var dy: sint;
+
+    func init(w: sint, h: sint) ulam {
+        var self = (:ulam){
+            .pixels = oat_sprite_new(w, h),
+            .pixel_idx = 0,
+            .steps_cur = 0,
+            .steps_tot = 0,
+            .x = PIXELS_W / 2,
+            .y = PIXELS_H / 2 + 1,
+            .dx = +0,
+            .dy = +1,
+        };
+        oat_sprite_draw_fill(self.pixels, 0xFF, 0xFF, 0xFF, 0xFF);
+        return self;
+    }
+
+    func fini(self: *ulam) void {
+        oat_sprite_del(self.*.pixels);
+    }
+
+    func update_next_pixel(self: *ulam, is_prime: bool) void {
+        if is_prime {
+            oat_sprite_set_pixel(self.*.pixels, self.*.x, self.*.y, 0x00, 0x00, 0x00, 0xFF);
+        }
+        else {
+            oat_sprite_set_pixel(self.*.pixels, self.*.x, self.*.y, 0xCC, 0xFF, 0xFF, 0xFF);
+        }
+        oat_sprite_set_pixel(self.*.pixels, PIXELS_W / 2, PIXELS_H / 2 + 1, 0xFF, 0x00, 0x00, 0xFF);
+
+        if self.*.steps_cur != 0 {
+            self.*.x = self.*.x + self.*.dx;
+            self.*.y = self.*.y + self.*.dy;
+            self.*.steps_cur = self.*.steps_cur - 1;
+        }
+
+        if self.*.steps_cur == 0 {
+            if self.*.dx == +0 and self.*.dy == +1 {
+                self.*.dx = +1;
+                self.*.dy = +0;
+                self.*.steps_tot = self.*.steps_tot + 1;
+            }
+            elif self.*.dx == +1 and self.*.dy == +0 {
+                self.*.dx = +0;
+                self.*.dy = -1;
+            }
+            elif self.*.dx == +0 and self.*.dy == -1 {
+                self.*.dx = -1;
+                self.*.dy = +0;
+                self.*.steps_tot = self.*.steps_tot + 1;
+            }
+            elif self.*.dx == -1 and self.*.dy == +0 {
+                self.*.dx = +0;
+                self.*.dy = +1;
+            }
+
+            self.*.steps_cur = self.*.steps_tot;
+        }
+
+        self.*.pixel_idx = self.*.pixel_idx + 1;
+    }
+}
+
+func main() void {
+    var opt_full = false;
+    var parser = std::argument_parser::init((:[][]byte)[
+        "full"
+    ]);
+    for parser.advance() {
+        if parser.check_option("full") {
+            opt_full = true;
+            continue;
+        }
+
+        var argument = parser.argument_value();
+        std::print_format_line(
+            std::err(),
+            "error: unrecognized argument `{}`",
+            (:[]std::formatter)[std::formatter::init[[[]byte]](&argument)]);
+        std::exit(std::EXIT_FAILURE);
+    }
+
+    oat_init(WINDOW_W, WINDOW_H, startof("Ulam Spiral"));
+    defer oat_fini();
+
+    var sieve = std::vector[[bool]]::init();
+    defer sieve.fini();
+    var max_side = sint::max(PIXELS_W, PIXELS_H);
+    sieve.resize((:usize)(max_side * max_side));
+    for i in sieve.count() {
+        sieve.data()[i] = true; # all default to "is prime"
+    }
+    sieve.data()[0] = false; # 0 is not prime
+    sieve.data()[1] = false; # 1 is not prime
+    for n in sieve.count() {
+        if not sieve.data()[n] {
+            continue;
+        }
+        var m = n + n; # multiples of n
+        for m < sieve.count() {
+            sieve.data()[m] = false;
+            m = m + n;
+        }
+    }
+
+    var ulam = ulam::init(PIXELS_W, PIXELS_H);
+    defer ulam.fini();
+
+    if opt_full {
+        for ulam.pixel_idx < sieve.count() {
+            ulam.update_next_pixel(sieve.data()[ulam.pixel_idx]);
+        }
+    }
+
+    var time: double = 0.0;
+    var prev: double = 0.0;
+    for not oat_get_quit_requested() {
+        var now: double = oat_now();
+        time = time + (now - prev);
+        prev = now;
+        if time <= TIMESTEP {
+            continue;
+        }
+        time = time - TIMESTEP;
+
+        if (oat_key_is_pressed(oat_key_escape())) {
+            oat_set_quit_requested(true);
+        }
+        if (oat_key_is_pressed(oat_key_f11())) {
+            oat_set_fullscreen(not oat_get_fullscreen());
+        }
+        var is_ctrl_down = oat_key_is_down(oat_key_lctrl()) or oat_key_is_down(oat_key_rctrl());
+        if (is_ctrl_down and oat_key_is_pressed(oat_key_s())) {
+            let f = "ulam-spiral.png";
+            oat_sprite_save_png_file(ulam.pixels, startof(f));
+            std::print_format_line(
+                std::err(),
+                "Saved image to file `{}`",
+                (:[]std::formatter)[std::formatter::init[[typeof(f)]](&f)]);
+        }
+
+        if ulam.pixel_idx < sieve.count() {
+            ulam.update_next_pixel(sieve.data()[ulam.pixel_idx]);
+        }
+
+        var screen_w = oat_screen_get_w();
+        var screen_h = oat_screen_get_h();
+        assert screen_w == WINDOW_W and screen_h == WINDOW_H;
+        oat_draw_clear(0x00, 0x00, 0x00);
+        oat_draw_sprite_ex(ulam.pixels, 0, 0, (:double)PIXELS_SCALE, (:double)PIXELS_SCALE, 0, 0, 0.0, false, false);
+        oat_end_frame();
+    }
+}
