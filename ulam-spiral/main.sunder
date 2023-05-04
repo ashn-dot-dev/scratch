@@ -37,7 +37,7 @@ struct ulam {
             .steps_cur = 0,
             .steps_tot = 0,
             .x = PIXELS_W / 2,
-            .y = PIXELS_H / 2 + 1,
+            .y = PIXELS_H / 2,
             .dx = +0,
             .dy = +1,
             .fg = fg,
@@ -115,7 +115,7 @@ func main() void {
     var sieve = std::vector[[bool]]::init();
     defer sieve.fini();
     var max_side = sint::max(PIXELS_W, PIXELS_H);
-    sieve.resize((:usize)(max_side * max_side));
+    sieve.resize((:usize)(max_side * max_side + 2 * max_side));
     for i in sieve.count() {
         sieve.data()[i] = true; # all default to "is prime"
     }
@@ -176,7 +176,7 @@ func main() void {
         oat_draw_clear(0x00, 0x00, 0x00);
         if (oat_key_is_down(oat_key_space())) {
             oat_draw_sprite_ex(ulam_b.pixels, 0, 0, (:double)PIXELS_SCALE, (:double)PIXELS_SCALE, 0, 0, 0.0, false, false);
-            oat_draw_rectangle(PIXELS_SCALE * (PIXELS_W / 2),  PIXELS_SCALE * (PIXELS_H / 2 + 1), PIXELS_SCALE, PIXELS_SCALE, 0xFF, 0x00, 0x00, 0xFF);
+            oat_draw_rectangle(PIXELS_SCALE * (PIXELS_W / 2),  PIXELS_SCALE * (PIXELS_H / 2), PIXELS_SCALE, PIXELS_SCALE, 0xFF, 0x00, 0x00, 0xFF);
         }
         else {
             oat_draw_sprite_ex(ulam_a.pixels, 0, 0, (:double)PIXELS_SCALE, (:double)PIXELS_SCALE, 0, 0, 0.0, false, false);
