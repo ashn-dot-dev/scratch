@@ -105,8 +105,8 @@ struct context {
             },
             .p1_score = 0,
             .p2_score = 0,
-            .font_score = oat_font_new_ttf(startof(public_pixel_ttf), countof(public_pixel_ttf), 80),
-            .font_serve = oat_font_new_ttf(startof(public_pixel_ttf), countof(public_pixel_ttf), 48),
+            .font_score = oat_font_new_ttf_from_mem(startof(public_pixel_ttf), countof(public_pixel_ttf), 80),
+            .font_serve = oat_font_new_ttf_from_mem(startof(public_pixel_ttf), countof(public_pixel_ttf), 48),
         };
     }
 

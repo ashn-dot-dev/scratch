@@ -186,7 +186,7 @@ func main() void {
         var is_ctrl_down = oat_key_is_down(oat_key_lctrl()) or oat_key_is_down(oat_key_rctrl());
         if (is_ctrl_down and oat_key_is_pressed(oat_key_s())) {
             let f = "ulam-spiral.png";
-            oat_screen_save_png_file(startof(f));
+            oat_screen_save_png_to_file(startof(f));
             std::print_format_line(
                 std::err(),
                 "Saved image to file `{}`",
