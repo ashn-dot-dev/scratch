@@ -152,6 +152,46 @@ func main() void {
         std::out(),
         "PART 1: {}",
         (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
+
+    var floor_y = max_y + 2;
+    for true {
+        var sand = (:coordinate){.x = SOURCE_X, .y = SOURCE_Y};
+        for true {
+            var next = (:coordinate){.x = sand.x, .y = sand.y + 1};
+            if not cave.contains(next) and next.y != floor_y {
+                sand = next;
+                continue;
+            }
+            var next = (:coordinate){.x = sand.x - 1, .y = sand.y + 1};
+            if not cave.contains(next) and next.y != floor_y {
+                sand = next;
+                continue;
+            }
+            var next = (:coordinate){.x = sand.x + 1, .y = sand.y + 1};
+            if not cave.contains(next) and next.y != floor_y {
+                sand = next;
+                continue;
+            }
+
+            break; # Sand came to rest...
+        }
+
+        cave.insert(sand, SAND);
+        if sand.x == SOURCE_X and sand.y == SOURCE_Y {
+            break; # Source is blocked...
+        }
+    }
+
+    var part2_answer: usize = 0;
+    var iter = std::hash_map_iterator[[coordinate, tile]]::init(&cave);
+    for iter.advance() {
+        part2_answer = part2_answer + (:usize)(iter.current().value.* == SAND);
+    }
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part2_answer)]](&part2_answer)]);
 }
 ################################################################################
 # PART 1: 665
+# PART 2: 25434
