@@ -1,0 +1,157 @@
+import "std";
+
+struct coordinate {
+    var x: ssize;
+    var y: ssize;
+
+    func hash(self: *coordinate) usize {
+        return self.*.x.hash() +% self.*.y.hash();
+    }
+
+    func compare(lhs: *coordinate, rhs: *coordinate) ssize {
+        var cmpx = std::compare[[ssize]](&lhs.*.x, &rhs.*.x);
+        var cmpy = std::compare[[ssize]](&lhs.*.y, &rhs.*.y);
+        if cmpx != 0 {
+            return cmpx;
+        }
+        if cmpy != 0 {
+            return cmpy;
+        }
+        return 0;
+    }
+}
+
+alias tile = byte;
+let ROCK: tile = '#';
+let SAND: tile = 'o';
+
+func main() void {
+    var result = std::file::open("day-14.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+    var result = std::read_all(reader);
+    var input = std::ascii::view_trimmed(result.value());
+
+    var lines = std::str::split(input, "\n");
+    defer std::slice[[[]byte]]::delete(lines);
+
+    var cave = std::hash_map[[coordinate, tile]]::init();
+    defer cave.fini();
+
+    var iter = std::slice_iterator[[[]byte]]::init(lines);
+    for iter.advance() {
+        var line = *iter.current();
+
+        var coordinates = std::str::split(line, " -> ");
+        defer std::slice[[[]byte]]::delete(coordinates);
+        assert countof(coordinates) >= 2;
+
+        for i in 1:countof(coordinates) {
+            var bgn = coordinates[i-1];
+            var end = coordinates[i];
+
+            var xy = std::str::split(bgn, ",");
+            defer std::slice[[[]byte]]::delete(xy);
+            var x = ssize::init_from_str(xy[0], 10);
+            var y = ssize::init_from_str(xy[1], 10);
+            var bgn = (:coordinate){
+                .x = x.value(),
+                .y = y.value(),
+            };
+
+            var xy = std::str::split(end, ",");
+            defer std::slice[[[]byte]]::delete(xy);
+            var x = ssize::init_from_str(xy[0], 10);
+            var y = ssize::init_from_str(xy[1], 10);
+            var end = (:coordinate){
+                .x = x.value(),
+                .y = y.value(),
+            };
+
+            assert bgn.x == end.x or bgn.y == end.y;
+            assert bgn.x != end.x or bgn.y != end.y;
+            var dx: ssize = 0;
+            var dy: ssize = 0;
+            if bgn.x < end.x {
+                dx = +1;
+            }
+            if bgn.x > end.x {
+                dx = -1;
+            }
+            if bgn.y < end.y {
+                dy = +1;
+            }
+            if bgn.y > end.y {
+                dy = -1;
+            }
+
+            var cur = bgn;
+            for true {
+                cave.insert(cur, ROCK);
+                if cur.x == end.x and cur.y == end.y {
+                    break;
+                }
+
+                cur.x = cur.x + dx;
+                cur.y = cur.y + dy;
+            }
+        }
+    }
+
+    var max_y: ssize = 0;
+    var iter = std::hash_map_iterator[[coordinate, tile]]::init(&cave);
+    for iter.advance() {
+        max_y = ssize::max(max_y, iter.current().key.*.y);
+    }
+
+    let SOURCE_X: ssize = 500;
+    let SOURCE_Y: ssize = 0;
+    for true {
+        var sand = (:coordinate){.x = SOURCE_X, .y = SOURCE_Y};
+        for true {
+            if sand.y > max_y {
+                break; # Falling into the endless void...
+            }
+
+            var next = (:coordinate){.x = sand.x, .y = sand.y + 1};
+            if not cave.contains(next) {
+                sand = next;
+                continue;
+            }
+            var next = (:coordinate){.x = sand.x - 1, .y = sand.y + 1};
+            if not cave.contains(next) {
+                sand = next;
+                continue;
+            }
+            var next = (:coordinate){.x = sand.x + 1, .y = sand.y + 1};
+            if not cave.contains(next) {
+                sand = next;
+                continue;
+            }
+
+            break; # Sand came to rest...
+        }
+
+        if sand.y > max_y {
+            break; # Falling into the endless void...
+        }
+        cave.insert(sand, SAND);
+        if sand.x == SOURCE_X and sand.y == SOURCE_Y {
+            break; # Source is blocked...
+        }
+    }
+
+    var part1_answer: usize = 0;
+    var iter = std::hash_map_iterator[[coordinate, tile]]::init(&cave);
+    for iter.advance() {
+        part1_answer = part1_answer + (:usize)(iter.current().value.* == SAND);
+    }
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part1_answer)]](&part1_answer)]);
+}
+################################################################################
+# PART 1: 665
