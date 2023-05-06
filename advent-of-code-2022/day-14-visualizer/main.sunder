@@ -1,0 +1,251 @@
+import "c";
+import "oat";
+import "std";
+
+struct coordinate {
+    var x: sint;
+    var y: sint;
+
+    func hash(self: *coordinate) usize {
+        var h = self.*.x.hash() +% self.*.y.hash();
+        return h *% h;
+    }
+
+    func compare(lhs: *coordinate, rhs: *coordinate) ssize {
+        var cmpx = std::compare[[sint]](&lhs.*.x, &rhs.*.x);
+        var cmpy = std::compare[[sint]](&lhs.*.y, &rhs.*.y);
+        if cmpx != 0 {
+            return (:ssize)cmpx;
+        }
+        if cmpy != 0 {
+            return (:ssize)cmpy;
+        }
+        return 0;
+    }
+}
+
+alias tile = byte;
+let ROCK: tile = '#';
+let SAND: tile = 'o';
+
+let SOURCE_X: sint = 500;
+let SOURCE_Y: sint = 0;
+
+let TIMESTEP = 1.0 / FPS;
+let FPS: f64 = 60.0;
+
+func main() void {
+    var parser = std::argument_parser::init((:[][]byte)[
+        "1",
+        "part1",
+        "2",
+        "part2",
+        "f",
+        "fast",
+    ]);
+
+    var opt_part = 1s;
+    var opt_fast = false;
+    var opt_file = std::optional[[[]byte]]::EMPTY;
+    for parser.advance() {
+        if parser.check_option("1") or parser.check_option("part1") {
+            opt_part = 1;
+            continue;
+        }
+        if parser.check_option("2") or parser.check_option("part2") {
+            opt_part = 2;
+            continue;
+        }
+        if parser.check_option("f") or parser.check_option("fast") {
+            opt_fast = true;
+            continue;
+        }
+
+        if opt_file.is_value() {
+            std::print_line(std::err(), "error: multiple input files specified");
+        }
+        opt_file = typeof(opt_file)::init_value(parser.argument_value());
+    }
+
+    var input = std::ascii::view_trimmed(embed("../day-14.input"));
+    var lines = std::str::split(input, "\n");
+    defer std::slice[[[]byte]]::delete(lines);
+
+    var cave = std::hash_map[[coordinate, tile]]::init();
+    defer cave.fini();
+
+    var iter = std::slice_iterator[[[]byte]]::init(lines);
+    for iter.advance() {
+        var line = *iter.current();
+
+        var coordinates = std::str::split(line, " -> ");
+        defer std::slice[[[]byte]]::delete(coordinates);
+        assert countof(coordinates) >= 2;
+
+        for i in 1:countof(coordinates) {
+            var bgn = coordinates[i-1];
+            var end = coordinates[i];
+
+            var xy = std::str::split(bgn, ",");
+            defer std::slice[[[]byte]]::delete(xy);
+            var x = sint::init_from_str(xy[0], 10);
+            var y = sint::init_from_str(xy[1], 10);
+            var bgn = (:coordinate){
+                .x = x.value(),
+                .y = y.value(),
+            };
+
+            var xy = std::str::split(end, ",");
+            defer std::slice[[[]byte]]::delete(xy);
+            var x = sint::init_from_str(xy[0], 10);
+            var y = sint::init_from_str(xy[1], 10);
+            var end = (:coordinate){
+                .x = x.value(),
+                .y = y.value(),
+            };
+
+            assert bgn.x == end.x or bgn.y == end.y;
+            assert bgn.x != end.x or bgn.y != end.y;
+            var dx: sint = 0;
+            var dy: sint = 0;
+            if bgn.x < end.x {
+                dx = +1;
+            }
+            if bgn.x > end.x {
+                dx = -1;
+            }
+            if bgn.y < end.y {
+                dy = +1;
+            }
+            if bgn.y > end.y {
+                dy = -1;
+            }
+
+            var cur = bgn;
+            for true {
+                cave.insert(cur, ROCK);
+                if cur.x == end.x and cur.y == end.y {
+                    break;
+                }
+
+                cur.x = cur.x + dx;
+                cur.y = cur.y + dy;
+            }
+        }
+    }
+
+    var min_x: sint = SOURCE_X;
+    var max_x: sint = SOURCE_X;
+    var min_y: sint = SOURCE_Y;
+    var max_y: sint = SOURCE_Y;
+    var iter = std::hash_map_iterator[[coordinate, tile]]::init(&cave);
+    for iter.advance() {
+        min_x = sint::min(min_x, iter.current().key.*.x);
+        max_x = sint::max(max_x, iter.current().key.*.x);
+        min_y = sint::min(min_y, iter.current().key.*.y);
+        max_y = sint::max(max_y, iter.current().key.*.y);
+    }
+
+    var MARGIN: sint = 10;
+    var lower_x: sint = min_x - (max_y - min_y + MARGIN);
+    var upper_x: sint = max_x + (max_y - min_y + MARGIN);
+    var lower_y: sint = min_y - MARGIN;
+    var upper_y: sint = max_y + MARGIN;
+
+    let PIXELS_SCALE: sint = 4;
+    var pixels_w = upper_x - lower_x;
+    var pixels_h = upper_y - lower_y;
+    var window_w = pixels_w * PIXELS_SCALE;
+    var window_h = pixels_h * PIXELS_SCALE;
+
+    if opt_part == 2 {
+        var lower_floor_x = lower_x - pixels_h * 2;
+        var upper_floor_x = upper_x + pixels_h * 2;
+        var lower_floor_y = max_y + 2;
+        var upper_floor_y = upper_y;
+        var floor_w = upper_floor_x - lower_floor_x;
+        var floor_h = upper_floor_y - lower_floor_y;
+        for i in (:usize)floor_w {
+            for j in (:usize)floor_h {
+                var x = lower_floor_x + (:sint)i;
+                var y = lower_floor_y + (:sint)j;
+                cave.insert((:coordinate){.x = x, .y = y}, ROCK);
+            }
+        }
+    }
+
+    oat_init(window_w, window_h, startof("Advent of Code 2022 - Day 14"));
+    defer oat_fini();
+
+    var pixels = oat_sprite_new(pixels_w, pixels_h);
+    defer oat_sprite_del(pixels);
+
+    var source_blocked = false;
+    var sand = (:coordinate){.x = SOURCE_X, .y = SOURCE_Y};
+    var time: double = 0.0;
+    var prev: double = 0.0;
+    for not oat_get_quit_requested() {
+        var now: double = oat_now();
+        time = time + (now - prev);
+        prev = now;
+        if time <= TIMESTEP {
+            continue;
+        }
+        time = time - TIMESTEP;
+
+        if (oat_key_is_pressed(oat_key_escape())) {
+            oat_set_quit_requested(true);
+        }
+
+        var fast = opt_fast or oat_key_is_down(oat_key_space()) or oat_key_is_down(oat_key_enter());
+        for not source_blocked {
+            if sand.y > upper_y {
+                # Sand is falling into the endless void...
+                sand = (:coordinate){.x = SOURCE_X, .y = SOURCE_Y};
+                break;
+            }
+
+            var next = (:coordinate){.x = sand.x, .y = sand.y + 1};
+            if not cave.contains(next) {
+                sand = next;
+                if fast { continue; } else { break; }
+            }
+            var next = (:coordinate){.x = sand.x - 1, .y = sand.y + 1};
+            if not cave.contains(next) {
+                sand = next;
+                if fast { continue; } else { break; }
+            }
+            var next = (:coordinate){.x = sand.x + 1, .y = sand.y + 1};
+            if not cave.contains(next) {
+                sand = next;
+                if fast { continue; } else { break; }
+            }
+
+            cave.insert(sand, SAND);
+            source_blocked = sand.x == SOURCE_X and sand.y == SOURCE_Y;
+            sand = (:coordinate){.x = SOURCE_X, .y = SOURCE_Y};
+            break;
+        }
+
+        oat_sprite_draw_clear(pixels, 0xBB, 0xEE, 0xEE);
+        oat_sprite_set_pixel(pixels, SOURCE_X - lower_x, SOURCE_Y - lower_y, 0xFF, 0x00, 0x00, 0xFF);
+        var iter = std::hash_map_iterator[[coordinate, tile]]::init(&cave);
+        for iter.advance() {
+            var x = iter.current().key.*.x - lower_x;
+            var y = iter.current().key.*.y - lower_y;
+            if (*iter.current().value == ROCK) {
+                oat_sprite_set_pixel(pixels, x, y, 0x00, 0x00, 0x00, 0xFF);
+            }
+            if (*iter.current().value == SAND) {
+                oat_sprite_set_pixel(pixels, x, y, 0xF0, 0xD0, 0xB0, 0xFF);
+            }
+        }
+        if not fast {
+            oat_sprite_set_pixel(pixels, sand.x - lower_x, sand.y - lower_y, 0x99, 0x66, 0x33, 0xFF);
+        }
+
+        oat_draw_clear(0x00, 0x00, 0x00);
+        oat_draw_sprite_ex(pixels, 0, 0, (:double)PIXELS_SCALE, (:double)PIXELS_SCALE, 0, 0, 0.0, false, false);
+        oat_end_frame();
+    }
+}
