@@ -1,0 +1,208 @@
+import "std";
+
+struct circuit {
+    let GATE_VAL = "VAL";       # rhs        -> out
+    let GATE_NOT = "NOT";       # ~rhs       -> out
+    let GATE_AND = "AND";       # lhs & rhs  -> out
+    let GATE_OR = "OR";         # lhs | rhs  -> out
+    let GATE_LSHIFT = "LSHIFT"; # lhs << rhs -> out
+    let GATE_RSHIFT = "RSHIFT"; # lhs >> rhs -> out
+
+    var gate: []byte;
+    var lhs: []byte;
+    var rhs: []byte;
+    var out: []byte;
+    var val: std::optional[[u16]]; # cached value
+
+    func eval(self: *circuit, circuits: *std::hash_map[[[]byte, circuit]]) u16 {
+        if self.*.val.is_value() {
+            return self.*.val.value();
+        }
+
+        var lhs: u16 = uninit;
+        var xhs = circuits.*.lookup_view(self.*.lhs);
+        if xhs.is_value() {
+            var xhs = xhs.value().value;
+            lhs = xhs.*.eval(circuits);
+        }
+        elif countof(self.*.lhs) != 0 and std::ascii::is_digit(self.*.lhs[0]) {
+            var xhs = u16::init_from_str(self.*.lhs, 10);
+            lhs = xhs.value();
+        }
+
+        var rhs: u16 = uninit;
+        var xhs = circuits.*.lookup_view(self.*.rhs);
+        if xhs.is_value() {
+            var xhs = xhs.value().value;
+            rhs = xhs.*.eval(circuits);
+        }
+        elif countof(self.*.rhs) != 0 and std::ascii::is_digit(self.*.rhs[0]) {
+            var xhs = u16::init_from_str(self.*.rhs, 10);
+            rhs = xhs.value();
+        }
+
+        if std::str::eq(self.*.gate, GATE_VAL) {
+            self.*.val = std::optional[[u16]]::init_value(rhs);
+            return self.*.val.value();
+        }
+
+        if std::str::eq(self.*.gate, GATE_NOT) {
+            self.*.val = std::optional[[u16]]::init_value(~rhs);
+            return self.*.val.value();
+        }
+
+        if std::str::eq(self.*.gate, GATE_AND) {
+            self.*.val = std::optional[[u16]]::init_value(lhs & rhs);
+            return self.*.val.value();
+        }
+
+        if std::str::eq(self.*.gate, GATE_OR) {
+            self.*.val = std::optional[[u16]]::init_value(lhs | rhs);
+            return self.*.val.value();
+        }
+
+        if std::str::eq(self.*.gate, GATE_LSHIFT) {
+            self.*.val = std::optional[[u16]]::init_value(lhs << (:usize)rhs);
+            return self.*.val.value();
+        }
+
+        if std::str::eq(self.*.gate, GATE_RSHIFT) {
+            self.*.val = std::optional[[u16]]::init_value(lhs >> (:usize)rhs);
+            return self.*.val.value();
+        }
+
+        assert false; # unreachable
+        return 0;
+    }
+}
+
+func main() void {
+    var result = std::file::open("day-07.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+    var result = std::read_all(reader);
+    var input = std::ascii::view_trimmed(result.value());
+
+    var lines = std::str::split(input, "\n");
+    defer std::slice[[[]byte]]::delete(lines);
+
+    # Map from output name to circuit.
+    var circuits = std::hash_map[[[]byte, circuit]]::init();
+    defer circuits.fini();
+
+    var iter = std::slice_iterator[[[]byte]]::init(lines);
+    for iter.advance() {
+        var line = *iter.current();
+
+        var split = std::str::split(line, " -> ");
+        defer std::slice[[[]byte]]::delete(split);
+
+        var in_ = split[0];
+        var out = split[1];
+
+        if std::str::contains(in_, "NOT") {
+            var split = std::str::split(in_, "NOT ");
+            defer std::slice[[[]byte]]::delete(split);
+            circuits.insert(out, (:circuit){
+                .gate = circuit::GATE_NOT,
+                .lhs = uninit,
+                .rhs = split[1],
+                .out = out,
+                .val = std::optional[[u16]]::EMPTY,
+            });
+            continue;
+        }
+
+        if std::str::contains(in_, "AND") {
+            var split = std::str::split(in_, " AND ");
+            defer std::slice[[[]byte]]::delete(split);
+            circuits.insert(out, (:circuit){
+                .gate = circuit::GATE_AND,
+                .lhs = split[0],
+                .rhs = split[1],
+                .out = out,
+                .val = std::optional[[u16]]::EMPTY,
+            });
+            continue;
+        }
+
+        if std::str::contains(in_, "OR") {
+            var split = std::str::split(in_, " OR ");
+            defer std::slice[[[]byte]]::delete(split);
+            circuits.insert(out, (:circuit){
+                .gate = circuit::GATE_OR,
+                .lhs = split[0],
+                .rhs = split[1],
+                .out = out,
+                .val = std::optional[[u16]]::EMPTY,
+            });
+            continue;
+        }
+
+        if std::str::contains(in_, "LSHIFT") {
+            var split = std::str::split(in_, " LSHIFT ");
+            defer std::slice[[[]byte]]::delete(split);
+            circuits.insert(out, (:circuit){
+                .gate = circuit::GATE_LSHIFT,
+                .lhs = split[0],
+                .rhs = split[1],
+                .out = out,
+                .val = std::optional[[u16]]::EMPTY,
+            });
+            continue;
+        }
+
+        if std::str::contains(in_, "RSHIFT") {
+            var split = std::str::split(in_, " RSHIFT ");
+            defer std::slice[[[]byte]]::delete(split);
+            circuits.insert(out, (:circuit){
+                .gate = circuit::GATE_RSHIFT,
+                .lhs = split[0],
+                .rhs = split[1],
+                .out = out,
+                .val = std::optional[[u16]]::EMPTY,
+            });
+            continue;
+        }
+
+        circuits.insert(out, (:circuit){
+            .gate = circuit::GATE_VAL,
+            .lhs = uninit,
+            .rhs = in_,
+            .out = out,
+            .val = std::optional[[u16]]::EMPTY,
+        });
+    }
+
+    var a = circuits.lookup_view("a");
+    var a = a.value().value;
+    var part1 = a.*.eval(&circuits);
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part1)]](&part1)]);
+
+    var iter = std::hash_map_iterator[[[]byte, circuit]]::init(&circuits);
+    for iter.advance() {
+        iter.current().value.*.val = std::optional[[u16]]::EMPTY;
+    }
+    var b = circuits.lookup_view("b");
+    var b = b.value().value;
+    *b = (:circuit){
+        .gate = circuit::GATE_VAL,
+        .lhs = uninit,
+        .rhs = uninit,
+        .out = "b",
+        .val = std::optional[[u16]]::init_value(part1),
+    };
+    var part2 = a.*.eval(&circuits);
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part2)]](&part2)]);
+}
+################################################################################
+# PART 1: 956
+# PART 2: 40149

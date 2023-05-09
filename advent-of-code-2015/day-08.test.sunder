@@ -1,0 +1,119 @@
+import "std";
+
+struct string_literal {
+    var input: []byte;
+    var decoded: std::string;
+    var encoded: std::string;
+}
+
+func process(input: []byte, allocator: std::allocator) string_literal {
+    var decoded = std::string::init_with_allocator(allocator);
+    var encoded = std::string::init_with_allocator(allocator);
+
+    assert std::str::starts_with(input, "\"");
+    assert std::str::ends_with(input, "\"");
+
+    # Decode input...
+    var writer = std::writer::init[[std::string]](&decoded);
+    var cur = countof("\"");
+    var end = countof(input) - countof("\"");
+    for cur != end {
+        if std::str::starts_with(input[cur:end], "\\\\") {
+            std::print(writer, "\\");
+            cur = cur + 2;
+            continue;
+        }
+
+        if std::str::starts_with(input[cur:end], "\\\"") {
+            std::print(writer, "\"");
+            cur = cur + 2;
+            continue;
+        }
+
+        if std::str::starts_with(input[cur:end], "\\x") {
+            assert countof(input[cur:end]) >= countof("\\xFF");
+            var result = u8::init_from_str(input[cur+2:cur+4], 16);
+            var ascii = (:byte)result.value();
+            std::print(writer, (:[]byte){&ascii, 1});
+            cur = cur + 4;
+            continue;
+        }
+
+        std::print(writer, input[cur:cur+1]);
+        cur = cur + 1;
+    }
+
+    # Encode input...
+    var writer = std::writer::init[[std::string]](&encoded);
+    std::print(writer, "\"");
+    var end = countof(input);
+    for cur in countof(input) {
+        if std::str::starts_with(input[cur:end], "\\") {
+            std::print(writer, "\\\\");
+            continue;
+        }
+
+        if std::str::starts_with(input[cur:end], "\"") {
+            std::print(writer, "\\\"");
+            continue;
+        }
+
+        std::print(writer, input[cur:cur+1]);
+    }
+    std::print(writer, "\"");
+
+    return (:string_literal){
+        .input = input,
+        .decoded = decoded,
+        .encoded = encoded,
+    };
+}
+
+func main() void {
+    var result = std::file::open("day-08.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+    var result = std::read_all(reader);
+    var input = std::ascii::view_trimmed(result.value());
+
+    var lines = std::str::split(input, "\n");
+    defer std::slice[[[]byte]]::delete(lines);
+
+    var allocator = std::general_allocator::init();
+    defer allocator.fini();
+    var allocator = std::allocator::init[[typeof(allocator)]](&allocator);
+
+    var literals = std::vector[[string_literal]]::init();
+    defer literals.fini();
+
+    var iter = std::slice_iterator[[[]byte]]::init(lines);
+    for iter.advance() {
+        var line = *iter.current();
+        literals.push(process(line, allocator));
+    }
+
+    var code = 0u;
+    var decoded_memory = 0u;
+    var encoded_memory = 0u;
+    for i in literals.count() {
+        code = code + countof(literals.data()[i].input);
+        decoded_memory = decoded_memory + literals.data()[i].decoded.count();
+        encoded_memory = encoded_memory + literals.data()[i].encoded.count();
+    }
+
+    var part1 = code - decoded_memory;
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part1)]](&part1)]);
+    var part2 = encoded_memory - code;
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[typeof(part2)]](&part2)]);
+}
+################################################################################
+# PART 1: 1350
+# PART 2: 2085
