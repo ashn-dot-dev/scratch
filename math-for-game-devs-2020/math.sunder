@@ -1,0 +1,93 @@
+import "std";
+
+struct vec2 {
+    var x: f32;
+    var y: f32;
+
+    let ZERO = (:vec2){.x = 0.0, .y = 0.0};
+
+    func init(x: f32, y: f32) vec2 {
+        return (:vec2){.x = x, .y = y};
+    }
+
+    func distance(a: vec2, b: vec2) f32 {
+        return vec2::magnitude(vec2::sub(b, a));
+    }
+
+    func magnitude(v: vec2) f32 {
+        return f32::sqrt(v.x * v.x + v.y * v.y);
+    }
+
+    func magnitude_squared(v: vec2) f32 {
+        return v.x * v.x + v.y * v.y;
+    }
+
+    func normalize(v: vec2) vec2 {
+        var magnitude = vec2::magnitude(v);
+        return (:vec2){.x = v.x / magnitude, .y = v.y / magnitude};
+    }
+
+    func normalize_or_zero(v: vec2) vec2 {
+        var magnitude = vec2::magnitude(v);
+        if magnitude == 0.0 {
+            return (:vec2){.x = 0.0, .y = 0.0};
+        }
+        return (:vec2){.x = v.x / magnitude, .y = v.y / magnitude};
+    }
+
+    func scale(v: vec2, scale: f32) vec2 {
+        return (:vec2){.x = v.x * scale, .y = v.y * scale};
+    }
+
+    func round(v: vec2) vec2 {
+        return (:vec2){.x = f32::round(v.x), .y = f32::round(v.y)};
+    }
+
+    func abs(v: vec2) vec2 {
+        return (:vec2){.x = f32::abs(v.x), .y = f32::abs(v.y)};
+    }
+
+    func neg(v: vec2) vec2 {
+        return (:vec2){.x = -v.x, .y = -v.y};
+    }
+
+    func add(a: vec2, b: vec2) vec2 {
+        return (:vec2){.x = a.x + b.x, .y = a.y + b.y};
+    }
+
+    func sub(a: vec2, b: vec2) vec2 {
+        return (:vec2){.x = a.x - b.x, .y = a.y - b.y};
+    }
+
+    func mul(a: vec2, b: vec2) vec2 {
+        return (:vec2){.x = a.x * b.x, .y = a.y * b.y};
+    }
+
+    func div(a: vec2, b: vec2) vec2 {
+        return (:vec2){.x = a.x / b.x, .y = a.y / b.y};
+    }
+
+    func dot(a: vec2, b: vec2) f32 {
+        return a.x * b.x + a.y * b.y;
+    }
+
+    func lerp(a: vec2, b: vec2, t: f32) vec2 {
+        return (:vec2){.x = ::lerp(a.x, b.x, t), .y = ::lerp(a.y, b.y, t)};
+    }
+}
+
+func clamp(value: f32, min: f32, max: f32) f32 {
+    assert min <= max;
+    if value < min {
+        return min;
+    }
+    if value > max {
+        return max;
+    }
+    return value;
+}
+
+func lerp(a: f32, b: f32, t: f32) f32 {
+    assert 0.0 <= t and t <= 1.0;
+    return (1.0 - t) * a + t * b;
+}

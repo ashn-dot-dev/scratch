@@ -1,0 +1,82 @@
+import "c";
+import "oat";
+
+import "draw.sunder";
+import "math.sunder";
+
+let SCREEN_W: sint = 640;
+let SCREEN_H: sint = 480;
+let TIMESTEP: f64 = 1.0 / 60.0;
+
+let RED = (:rgba){.r = 0xFF, .g = 0x00, .b = 0x00, .a = 0xFF };
+let GREEN = (:rgba){.r = 0x00, .g = 0xFF, .b = 0x00, .a = 0xFF };
+let BLUE = (:rgba){.r = 0x00, .g = 0x00, .b = 0xFF, .a = 0xFF};
+let WHITE = (:rgba){.r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0xFF};
+
+func main() void {
+    oat_init(SCREEN_W, SCREEN_H, startof("Assignment 1"));
+    defer oat_fini();
+
+    var ring_center = vec2::init((:f32)SCREEN_W / 2.0 + HALF_PIXEL, (:f32)SCREEN_H / 2.0 + HALF_PIXEL);
+    var ring_radius = 100.0f32;
+    let ring_thickness = 2.0f32;
+
+    var time: double = 0.0;
+    var prev: double = 0.0;
+    for not oat_get_quit_requested() {
+        var now: double = oat_now();
+        time = time + (now - prev);
+        prev = now;
+        if time <= TIMESTEP {
+            continue;
+        }
+        time = time - TIMESTEP;
+
+        var screen_w = (:f32)oat_screen_get_w();
+        var screen_h = (:f32)oat_screen_get_h();
+
+        if (oat_key_is_pressed(oat_key_escape())) {
+            oat_set_quit_requested(true);
+        }
+
+        if (oat_key_is_down(oat_key_w())) {
+            ring_radius = ring_radius + 1.0;
+        }
+        if (oat_key_is_down(oat_key_s())) {
+            ring_radius = ring_radius - 1.0;
+        }
+        ring_radius = clamp(ring_radius, 0.0, f32::min(screen_w, screen_h) / 2.0);
+
+        var ring_velocity = vec2::init(0.0, 0.0);
+        if (oat_key_is_down(oat_key_larrow())) {
+            ring_velocity.x = ring_velocity.x - 1.0;
+        }
+        if (oat_key_is_down(oat_key_rarrow())) {
+            ring_velocity.x = ring_velocity.x + 1.0;
+        }
+        if (oat_key_is_down(oat_key_uarrow())) {
+            ring_velocity.y = ring_velocity.y - 1.0;
+        }
+        if (oat_key_is_down(oat_key_darrow())) {
+            ring_velocity.y = ring_velocity.y + 1.0;
+        }
+        ring_center = vec2::add(ring_center, vec2::normalize_or_zero(ring_velocity));
+
+        var cursor = vec2::init((:f32)oat_mouse_get_x() + HALF_PIXEL, (:f32)oat_mouse_get_y() + HALF_PIXEL);
+        var cursor_inside_ring = vec2::distance(ring_center, cursor) <= ring_radius;
+        var color = RED;
+        if cursor_inside_ring {
+            color = GREEN;
+        }
+
+        oat_draw_clear(0x40, 0x40, 0x40);
+        draw_circle_outline(ring_center, ring_radius, ring_thickness, color);
+        draw_line(vec2::sub(ring_center, vec2::init(-HALF_PIXEL, -HALF_PIXEL)), cursor, WHITE);
+        draw_line(vec2::sub(ring_center, vec2::init(-HALF_PIXEL, +HALF_PIXEL)), cursor, WHITE);
+        draw_line(vec2::sub(ring_center, vec2::init(+HALF_PIXEL, -HALF_PIXEL)), cursor, WHITE);
+        draw_line(vec2::sub(ring_center, vec2::init(+HALF_PIXEL, +HALF_PIXEL)), cursor, WHITE);
+        draw_circle(ring_center, 3.0, BLUE);
+        draw_circle(cursor, 1.0, BLUE);
+        oat_end_frame();
+    }
+}

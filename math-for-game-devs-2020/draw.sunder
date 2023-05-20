@@ -1,0 +1,89 @@
+import "c";
+import "oat";
+
+import "math.sunder";
+
+let HALF_PIXEL = 0.5f32;
+
+struct rgba {
+    var r: u8;
+    var g: u8;
+    var b: u8;
+    var a: u8;
+
+    func init(r: u8, g: u8, b: u8, a: u8) rgba {
+        return (:rgba){.r = r, .g = g, .b = b, .a = a};
+    }
+}
+
+func draw_line(a: vec2, b: vec2, color: rgba) void {
+    var a = vec2::round(a);
+    var b = vec2::round(b);
+
+    var dx = b.x - a.x;
+    var dy = b.y - a.y;
+    var abs_dx = f32::abs(dx);
+    var abs_dy = f32::abs(dy);
+    var nsteps = f32::max(abs_dx, abs_dy);
+
+    var nsteps_inverse = 1.0 / nsteps;
+    var xstep = dx * nsteps_inverse;
+    var ystep = dy * nsteps_inverse;
+
+    var x = a.x;
+    var y = a.y;
+    var step = 0.0f32;
+    for step <= nsteps {
+        var xround = (:sint)f32::round(x);
+        var yround = (:sint)f32::round(y);
+        oat_draw_pixel(xround, yround, color.r, color.g, color.b, color.a);
+        x = x + xstep;
+        y = y + ystep;
+        step = step + 1.0;
+    }
+}
+
+func draw_circle(center: vec2, radius: f32, color: rgba) void {
+    var y_cur = (:sint)f32::round(center.y - radius);
+    var y_end = (:sint)f32::round(center.y + radius);
+    for y_cur != y_end {
+        defer { y_cur = y_cur + 1; }
+
+        var x_cur = (:sint)f32::round(center.x - radius);
+        var x_end = (:sint)f32::round(center.x + radius);
+        for x_cur != x_end {
+            defer { x_cur = x_cur + 1; }
+
+            var position = vec2::init((:f32)x_cur, (:f32)y_cur);
+            if vec2::distance(center, position) > radius {
+                continue;
+            }
+
+            oat_draw_pixel(x_cur, y_cur, color.r, color.g, color.b, color.a);
+        }
+    }
+}
+
+func draw_circle_outline(center: vec2, radius: f32, thickness: f32, color: rgba) void {
+    var y_cur = (:sint)f32::round(center.y - radius);
+    var y_end = (:sint)f32::round(center.y + radius);
+    for y_cur != y_end {
+        defer { y_cur = y_cur + 1; }
+
+        var x_cur = (:sint)f32::round(center.x - radius);
+        var x_end = (:sint)f32::round(center.x + radius);
+        for x_cur != x_end {
+            defer { x_cur = x_cur + 1; }
+
+            var position = vec2::init((:f32)x_cur, (:f32)y_cur);
+            if vec2::distance(center, position) > radius {
+                continue;
+            }
+            if vec2::distance(center, position) < radius - thickness {
+                continue;
+            }
+
+            oat_draw_pixel(x_cur, y_cur, color.r, color.g, color.b, color.a);
+        }
+    }
+}

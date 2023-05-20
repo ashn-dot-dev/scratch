@@ -1,0 +1,183 @@
+import "c";
+import "oat";
+import "std";
+
+import "draw.sunder";
+import "math.sunder";
+
+let SCREEN_W: sint = 640;
+let SCREEN_H: sint = 480;
+let TIMESTEP: f64 = 1.0 / 60.0;
+
+let RED = (:rgba){.r = 0xFF, .g = 0x00, .b = 0x00, .a = 0xFF };
+let GREEN = (:rgba){.r = 0x00, .g = 0xFF, .b = 0x00, .a = 0xFF };
+let BLUE = (:rgba){.r = 0x00, .g = 0x00, .b = 0xFF, .a = 0xFF };
+let GREY = (:rgba){.r = 0x77, .g = 0x77, .b = 0x77, .a = 0xFF};
+
+let SCALE = 64.0f32;
+
+# Transform from our screen coordinates to SDL's pixel coordinates.
+func screen_coordinates_to_sdl_coordinates(v: vec2) vec2 {
+    var sdl_origin = (:vec2){
+        .x = (:f32)(oat_screen_get_w() / 2),
+        .y = (:f32)(oat_screen_get_h() / 2),
+    };
+    v.y = -v.y;
+    v = vec2::scale(v, SCALE);
+    v = vec2::add(v, sdl_origin);
+    return v;
+}
+
+# Transform world space coordinates to local space coordinates.
+func world_space_to_local_space(point: vec2, local_point_in_world_space: vec2, local_x: vec2, local_y: vec2) vec2 {
+    var difference = vec2::sub(point, local_point_in_world_space);
+    var x = vec2::dot(difference, vec2::normalize(local_x));
+    var y = vec2::dot(difference, vec2::normalize(local_y));
+    return vec2::init(x, y);
+}
+
+# Transform local space coordinates to world  space coordinates.
+func local_space_to_world_space(point: vec2, local_point_in_world_space: vec2, local_x: vec2, local_y: vec2) vec2 {
+    var offset = vec2::add(
+        vec2::scale(local_x, point.x),
+        vec2::scale(local_y, point.y));
+    return vec2::add(offset, local_point_in_world_space);
+
+}
+
+func main() void {
+    oat_init(SCREEN_W, SCREEN_H, startof("Assignment 3"));
+    defer oat_fini();
+
+    let font = embed("../assets/PublicPixel.ttf");
+    var font = oat_font_new_ttf_from_mem(startof(font), countof(font), 8);
+    defer oat_font_del(font);
+
+    var rotation = 0.0f32;
+    var local_point = vec2::init(-1.5, 1.0);
+    var world_point = vec2::init(0.0, 0.0);
+
+    var time: double = 0.0;
+    var prev: double = 0.0;
+    for not oat_get_quit_requested() {
+        var now: double = oat_now();
+        time = time + (now - prev);
+        prev = now;
+        if time <= TIMESTEP {
+            continue;
+        }
+        time = time - TIMESTEP;
+
+        var screen_w = oat_screen_get_w();
+        var screen_h = oat_screen_get_h();
+
+        if (oat_key_is_pressed(oat_key_escape())) {
+            oat_set_quit_requested(true);
+        }
+
+        if (oat_key_is_down(oat_key_q())) {
+            rotation = rotation + 0.01;
+        }
+        if (oat_key_is_down(oat_key_e())) {
+            rotation = rotation - 0.01;
+        }
+        var local_x = vec2::init(f32::cos(rotation), f32::sin(rotation));
+        var local_y = vec2::init(-f32::sin(rotation), f32::cos(rotation));
+
+        let VELOCITY_SCALE = 0.05f32;
+
+        var local_point_velocity = vec2::init(0.0, 0.0);
+        if (oat_key_is_down(oat_key_a())) {
+            local_point_velocity.x = local_point_velocity.x - 1.0;
+        }
+        if (oat_key_is_down(oat_key_d())) {
+            local_point_velocity.x = local_point_velocity.x + 1.0;
+        }
+        if (oat_key_is_down(oat_key_s())) {
+            local_point_velocity.y = local_point_velocity.y - 1.0;
+        }
+        if (oat_key_is_down(oat_key_w())) {
+            local_point_velocity.y = local_point_velocity.y + 1.0;
+        }
+        local_point_velocity = vec2::scale(local_point_velocity, SCALE);
+        local_point = vec2::add(local_point, vec2::scale(vec2::normalize_or_zero(local_point_velocity), VELOCITY_SCALE));
+
+        var world_point_velocity = vec2::init(0.0, 0.0);
+        if (oat_key_is_down(oat_key_larrow())) {
+            world_point_velocity.x = world_point_velocity.x - 1.0;
+        }
+        if (oat_key_is_down(oat_key_rarrow())) {
+            world_point_velocity.x = world_point_velocity.x + 1.0;
+        }
+        if (oat_key_is_down(oat_key_darrow())) {
+            world_point_velocity.y = world_point_velocity.y - 1.0;
+        }
+        if (oat_key_is_down(oat_key_uarrow())) {
+            world_point_velocity.y = world_point_velocity.y + 1.0;
+        }
+        world_point = vec2::add(world_point, vec2::scale(vec2::normalize_or_zero(world_point_velocity), VELOCITY_SCALE));
+
+        var world_point_in_local_space = world_space_to_local_space(world_point, local_point, local_x, local_y);
+        var local_point_in_world_space = local_space_to_world_space(world_point_in_local_space, local_point, local_x, local_y);
+
+        oat_draw_clear(0x40, 0x40, 0x40);
+        oat_draw_rectangle(0, screen_h / 2 - 1, screen_w, 2, GREY.r, GREY.g, GREY.b, GREY.a); # x-axis
+        oat_draw_rectangle(screen_w / 2 - 1, 0, 2, screen_h, GREY.r, GREY.g, GREY.b, GREY.a); # y-axis
+        draw_line(
+            screen_coordinates_to_sdl_coordinates(local_point),
+            screen_coordinates_to_sdl_coordinates(vec2::add(local_point, local_x)),
+            RED);
+        draw_line(
+            screen_coordinates_to_sdl_coordinates(local_point),
+            screen_coordinates_to_sdl_coordinates(vec2::add(local_point, local_y)),
+            GREEN);
+        var point = screen_coordinates_to_sdl_coordinates(local_point);
+        oat_draw_rectangle((:sint)f32::round(point.x) - 2, (:sint)f32::round(point.y) - 2, 4, 4, BLUE.r, BLUE.g, BLUE.b, BLUE.a);
+        var point = screen_coordinates_to_sdl_coordinates(world_point);
+        oat_draw_rectangle((:sint)f32::round(point.x) - 2, (:sint)f32::round(point.y) - 2, 4, 4, BLUE.r, BLUE.g, BLUE.b, BLUE.a);
+        let OFFSET: sint = 2;
+        var s = std::string::init_from_format(
+            "world point in world space: ({.3}, {.3})",
+            (:[]std::formatter)[
+                std::formatter::init[[f32]](&world_point.x),
+                std::formatter::init[[f32]](&world_point.y)]);
+        defer s.fini();
+        oat_draw_text(s.cstr(), OFFSET, 1 * OFFSET + 0 * oat_font_get_size(font), font, 0xFF, 0xFF, 0xFF, 0xFF);
+        var s = std::string::init_from_format(
+            "local point in world space: ({.3}, {.3})",
+            (:[]std::formatter)[
+                std::formatter::init[[f32]](&local_point.x),
+                std::formatter::init[[f32]](&local_point.y)]);
+        defer s.fini();
+        oat_draw_text(s.cstr(), OFFSET, 2 * OFFSET + 1 * oat_font_get_size(font), font, 0xFF, 0xFF, 0xFF, 0xFF);
+        var s = std::string::init_from_format(
+            "local space +x axis in world space: ({.3}, {.3})",
+            (:[]std::formatter)[
+                std::formatter::init[[f32]](&local_x.x),
+                std::formatter::init[[f32]](&local_x.y)]);
+        defer s.fini();
+        oat_draw_text(s.cstr(), OFFSET, 3 * OFFSET + 2 * oat_font_get_size(font), font, 0xFF, 0xFF, 0xFF, 0xFF);
+        var s = std::string::init_from_format(
+            "local space +y axis in world space: ({.3}, {.3})",
+            (:[]std::formatter)[
+                std::formatter::init[[f32]](&local_y.x),
+                std::formatter::init[[f32]](&local_y.y)]);
+        defer s.fini();
+        oat_draw_text(s.cstr(), OFFSET, 4 * OFFSET + 3 * oat_font_get_size(font), font, 0xFF, 0xFF, 0xFF, 0xFF);
+        var s = std::string::init_from_format(
+            "[calculated] world point to local space: ({.3}, {.3})",
+            (:[]std::formatter)[
+                std::formatter::init[[f32]](&world_point_in_local_space.x),
+                std::formatter::init[[f32]](&world_point_in_local_space.y)]);
+        defer s.fini();
+        oat_draw_text(s.cstr(), OFFSET, 6 * OFFSET + 5 * oat_font_get_size(font), font, 0xFF, 0xFF, 0xFF, 0xFF);
+        var s = std::string::init_from_format(
+            "[calculated] local point to world space: ({.3}, {.3})",
+            (:[]std::formatter)[
+                std::formatter::init[[f32]](&local_point_in_world_space.x),
+                std::formatter::init[[f32]](&local_point_in_world_space.y)]);
+        defer s.fini();
+        oat_draw_text(s.cstr(), OFFSET, 6 * OFFSET + 6 * oat_font_get_size(font), font, 0xFF, 0xFF, 0xFF, 0xFF);
+        oat_end_frame();
+    }
+}

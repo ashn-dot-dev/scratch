@@ -7,10 +7,7 @@ let WINDOW_H: sint = 600;
 let TIMESTEP = 1.0 / FPS;
 let FPS: f64 = 60.0;
 
-# Public Pixel Font, version 1.1.
-# Licensed as Creative Commons Zero v1.0 Universal.
-# https://ggbot.itch.io/public-pixel-font
-let public_pixel_ttf = embed("PublicPixel.ttf");
+let public_pixel_ttf = embed("../assets/PublicPixel.ttf");
 
 struct vec2f32 {
     var x: f32;
