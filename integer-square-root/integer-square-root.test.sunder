@@ -29,4 +29,6 @@ func main() void {
     assert isqrt[[usize]](10) == 3;
     assert isqrt[[ssize]](100) == 10;
     assert isqrt[[ssize]](101) == 10;
+
+    assert isqrt[[u64]](u64::MAX) == 4294967295;
 }
