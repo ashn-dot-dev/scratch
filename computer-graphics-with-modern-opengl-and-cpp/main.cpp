@@ -6,6 +6,9 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 static constexpr GLint WINDOW_W = 800;
 static constexpr GLint WINDOW_H = 600;
@@ -14,7 +17,7 @@ static GLuint VAO;
 static GLuint VBO;
 static GLuint program;
 
-GLuint x_translation_uniform;
+GLuint model_uniform;
 float x_translation;
 
 // Vertex Shader
@@ -23,10 +26,10 @@ static char const* vshader = R"SOURCE(
 
 layout (location = 0) in vec3 pos;
 
-uniform float x_translation;
+uniform mat4 model;
 
 void main() {
-    gl_Position = vec4(0.4 * pos.x + x_translation, 0.4 * pos.y, pos.z, 1.0);
+    gl_Position = model * vec4(0.4 * pos.x, 0.4 * pos.y, pos.z, 1.0);
 }
 )SOURCE";
 
@@ -140,7 +143,7 @@ compile_shaders()
         return;
     }
 
-    x_translation_uniform = glGetUniformLocation(program, "x_translation");
+    model_uniform = glGetUniformLocation(program, "model");
 }
 
 int
@@ -214,7 +217,9 @@ main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(program);
-        glUniform1f(x_translation_uniform, x_translation);
+        glm::mat4 model(1.0f);
+        model = glm::translate(model, glm::vec3(x_translation, 0.0f, 0.0f));
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
