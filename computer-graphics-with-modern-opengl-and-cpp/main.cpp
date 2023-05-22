@@ -18,7 +18,13 @@ static GLuint VBO;
 static GLuint program;
 
 GLuint model_uniform;
-float x_translation;
+
+[[maybe_unused]] static constexpr float PI = (float)3.14159265358979323846;
+[[maybe_unused]] static constexpr float
+degrees_to_radians(float degrees)
+{
+    return degrees * (PI / 180.0f);
+}
 
 // Vertex Shader
 static char const* vshader = R"SOURCE(
@@ -210,7 +216,8 @@ main()
         /* Get and handle user input events. */
         glfwPollEvents();
 
-        x_translation = 0.5f * sinf(elapsed.count());
+        float x_translation = 0.5f * sinf(elapsed.count());
+        float angle = elapsed.count();
 
         /* Clear window. */
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -219,6 +226,7 @@ main()
         glUseProgram(program);
         glm::mat4 model(1.0f);
         model = glm::translate(model, glm::vec3(x_translation, 0.0f, 0.0f));
+        model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
