@@ -1,3 +1,5 @@
+#include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -12,14 +14,19 @@ static GLuint VAO;
 static GLuint VBO;
 static GLuint program;
 
+GLuint x_translation_uniform;
+float x_translation;
+
 // Vertex Shader
 static char const* vshader = R"SOURCE(
 #version 330
 
 layout (location = 0) in vec3 pos;
 
+uniform float x_translation;
+
 void main() {
-    gl_Position = vec4(0.4 * pos.x, 0.4 * pos.y, pos.z, 1.0);
+    gl_Position = vec4(0.4 * pos.x + x_translation, 0.4 * pos.y, pos.z, 1.0);
 }
 )SOURCE";
 
@@ -132,11 +139,15 @@ compile_shaders()
         std::fprintf(stderr, "error validating program: %s\n", elog);
         return;
     }
+
+    x_translation_uniform = glGetUniformLocation(program, "x_translation");
 }
 
 int
 main()
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     /* Init GLFW */
     if (!glfwInit()) {
         std::fprintf(stderr, "GLFW initialization failed\n");
@@ -190,14 +201,20 @@ main()
 
     /* Main loop. */
     while (!glfwWindowShouldClose(window)) {
+        auto now = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<float> elapsed = now - start;
+
         /* Get and handle user input events. */
         glfwPollEvents();
+
+        x_translation = 0.5f * sinf(elapsed.count());
 
         /* Clear window. */
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(program);
+        glUniform1f(x_translation_uniform, x_translation);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
