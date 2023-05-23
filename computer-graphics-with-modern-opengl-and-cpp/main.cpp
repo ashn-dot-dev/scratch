@@ -35,7 +35,7 @@ layout (location = 0) in vec3 pos;
 uniform mat4 model;
 
 void main() {
-    gl_Position = model * vec4(0.4 * pos.x, 0.4 * pos.y, pos.z, 1.0);
+    gl_Position = model * vec4(pos, 1.0);
 }
 )SOURCE";
 
@@ -216,8 +216,9 @@ main()
         /* Get and handle user input events. */
         glfwPollEvents();
 
-        float x_translation = 0.5f * sinf(elapsed.count());
+        float x_translation = 0.5f * std::sin(elapsed.count());
         float angle = elapsed.count();
+        float scale = 0.5f + std::sin(elapsed.count()) / 4.0f;
 
         /* Clear window. */
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -227,6 +228,7 @@ main()
         glm::mat4 model(1.0f);
         model = glm::translate(model, glm::vec3(x_translation, 0.0f, 0.0f));
         model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, 1.0f));
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
