@@ -15,6 +15,7 @@ static constexpr GLint WINDOW_H = 600;
 
 static GLuint VAO;
 static GLuint VBO;
+static GLuint IBO;
 static GLuint program;
 
 GLuint model_uniform;
@@ -69,20 +70,35 @@ key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 static void
 create_triangle()
 {
+    GLuint indices[] = {
+        // clang-format off
+        0, 3, 1,
+        1, 3, 2,
+        2, 3, 0,
+        0, 1, 2
+        // clang-format on
+    };
     GLfloat vertices[] = {
         // clang-format off
         -1.0f, -1.0f, +0.0f,
+        +0.0f, -1.0f, +1.0f,
         +1.0f, -1.0f, +0.0f,
         +0.0f, +1.0f, +0.0f,
         // clang-format on
     };
 
+    // GL_STATIC_DRAW: Data in the vertices will not change.
+
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
+    glGenBuffers(1, &IBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // GL_STATIC_DRAW: Data in the vertices will not change.
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // Index of 0 is used for `location = 0` for `pos` in the vertex shader.
@@ -92,6 +108,7 @@ create_triangle()
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0); // unbind VBO
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // unbind IBO
     glBindVertexArray(0); // unbind VAO
 }
 
@@ -205,6 +222,9 @@ main()
         std::exit(EXIT_FAILURE);
     }
 
+    /* Enable depth test. */
+    glEnable(GL_DEPTH_TEST);
+
     /* Setup viewport size. */
     glViewport(0, 0, buffer_w, buffer_h); // entire window
 
@@ -225,18 +245,24 @@ main()
         [[maybe_unused]] float angle = elapsed.count();
         [[maybe_unused]] float scale = 0.5f + std::sin(elapsed.count()) / 4.0f;
 
-        /* Clear window. */
+        /* Clear window (color and depth). */
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(program);
         glm::mat4 model(1.0f);
         //model = glm::translate(model, glm::vec3(x_translation, 0.0f, 0.0f));
-        //model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
-        //model = glm::scale(model, glm::vec3(scale, scale, 1.0f));
+        model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+        // glDrawArrays w/ GL_TRIANGLES: Draw using points from the VAO (used
+        // without binding to the IBO).
+        // glDrawElements w/ GL_TRIANGLES: Draw using points from the VAO
+        // indexed by the IBO.
+        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
         glUseProgram(0);
 
