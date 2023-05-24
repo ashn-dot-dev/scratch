@@ -32,10 +32,13 @@ static char const* vshader = R"SOURCE(
 
 layout (location = 0) in vec3 pos;
 
+out vec4 vertex_color;
+
 uniform mat4 model;
 
 void main() {
     gl_Position = model * vec4(pos, 1.0);
+    vertex_color = vec4(clamp(pos, 0.0, 1.0), 1.0);
 }
 )SOURCE";
 
@@ -43,10 +46,12 @@ void main() {
 static char const* fshader = R"SOURCE(
 #version 330
 
-out vec4 colors;
+in vec4 vertex_color;
+
+out vec4 color;
 
 void main() {
-    colors = vec4(1.0, 0.0, 0.0, 1.0);
+    color = vertex_color;
 }
 )SOURCE";
 
@@ -216,9 +221,9 @@ main()
         /* Get and handle user input events. */
         glfwPollEvents();
 
-        float x_translation = 0.5f * std::sin(elapsed.count());
-        float angle = elapsed.count();
-        float scale = 0.5f + std::sin(elapsed.count()) / 4.0f;
+        [[maybe_unused]] float x_translation = 0.5f * std::sin(elapsed.count());
+        [[maybe_unused]] float angle = elapsed.count();
+        [[maybe_unused]] float scale = 0.5f + std::sin(elapsed.count()) / 4.0f;
 
         /* Clear window. */
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -226,9 +231,9 @@ main()
 
         glUseProgram(program);
         glm::mat4 model(1.0f);
-        model = glm::translate(model, glm::vec3(x_translation, 0.0f, 0.0f));
-        model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::scale(model, glm::vec3(scale, scale, 1.0f));
+        //model = glm::translate(model, glm::vec3(x_translation, 0.0f, 0.0f));
+        //model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+        //model = glm::scale(model, glm::vec3(scale, scale, 1.0f));
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
