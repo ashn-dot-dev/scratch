@@ -19,6 +19,7 @@ static GLuint IBO;
 static GLuint program;
 
 GLuint model_uniform;
+GLuint projection_uniform;
 
 [[maybe_unused]] static constexpr float PI = (float)3.14159265358979323846;
 [[maybe_unused]] static constexpr float
@@ -36,9 +37,10 @@ layout (location = 0) in vec3 pos;
 out vec4 vertex_color;
 
 uniform mat4 model;
+uniform mat4 projection;
 
 void main() {
-    gl_Position = model * vec4(pos, 1.0);
+    gl_Position = projection * model * vec4(pos, 1.0);
     vertex_color = vec4(clamp(pos, 0.0, 1.0), 1.0);
 }
 )SOURCE";
@@ -172,6 +174,7 @@ compile_shaders()
     }
 
     model_uniform = glGetUniformLocation(program, "model");
+    projection_uniform = glGetUniformLocation(program, "projection");
 }
 
 int
@@ -233,6 +236,12 @@ main()
     create_triangle();
     compile_shaders();
 
+    float fovy = 45.0f; // FOV in the Y direction.
+    float aspect = (GLfloat)buffer_w / (GLfloat)buffer_h;
+    float z_near = 0.1f;
+    float z_far = 100.0f;
+    glm::mat4 projection = glm::perspective(fovy, aspect, z_near, z_far);
+
     /* Main loop. */
     while (!glfwWindowShouldClose(window)) {
         auto now = std::chrono::high_resolution_clock::now();
@@ -241,7 +250,8 @@ main()
         /* Get and handle user input events. */
         glfwPollEvents();
 
-        [[maybe_unused]] float x_translation = 0.5f * std::sin(elapsed.count());
+        float x_translation = 0.5f * std::sin(elapsed.count());
+        float y_translation = 0.5f * std::cos(elapsed.count());
         [[maybe_unused]] float angle = elapsed.count();
         [[maybe_unused]] float scale = 0.5f + std::sin(elapsed.count()) / 4.0f;
 
@@ -251,10 +261,13 @@ main()
 
         glUseProgram(program);
         glm::mat4 model(1.0f);
-        //model = glm::translate(model, glm::vec3(x_translation, 0.0f, 0.0f));
+        model = glm::translate(
+            model, glm::vec3(x_translation, y_translation, -2.5f));
         model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(
+            projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
         glBindVertexArray(VAO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
         // glDrawArrays w/ GL_TRIANGLES: Draw using points from the VAO (used
