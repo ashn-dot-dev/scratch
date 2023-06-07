@@ -5,39 +5,20 @@ struct coordinate {
     var y: ssize;
 
     func hash(self: *coordinate) usize {
-        # Swiching from the slow hash function below to this hash function
-        # brought the part one + part two execution time down from multiple
-        # minutes to ~6.0 seconds without optimization and ~1.6 seconds with
-        # -Os. I guess the existing hash function must have been causing a
-        # bunch of collisions.
         var h = self.*.x.hash() +% self.*.y.hash();
         return h *% h;
-        # vvv original incredibly slow hash function vvv
-        #return self.*.x.hash() +% self.*.y.hash();
     }
 
     func compare(lhs: *coordinate, rhs: *coordinate) ssize {
-        # We exclusively use coordinate::compare for testing equality in the
-        # cave hash map, so we can get a huge performance boost by only
-        # checking for equality and returning a dummy -1 value if the
-        # coordinates are not equal. Using this compare implementation brought
-        # an unoptimized part one time down from ~5.5 seconds to ~1.6 seconds
-        # of execution time.
-        if lhs.*.x == rhs.*.x and lhs.*.y == rhs.*.y {
-            return 0;
+        var cmpx = ssize::cmp(lhs.*.x, rhs.*.x);
+        if cmpx != 0 {
+            return cmpx;
         }
-        return -1;
-
-        ## vvv original incredibly slow compare implmentation vvv
-        #var cmpx = std::compare[[ssize]](&lhs.*.x, &rhs.*.x);
-        #var cmpy = std::compare[[ssize]](&lhs.*.y, &rhs.*.y);
-        #if cmpx != 0 {
-        #    return cmpx;
-        #}
-        #if cmpy != 0 {
-        #    return cmpy;
-        #}
-        #return 0;
+        var cmpy = ssize::cmp(lhs.*.y, rhs.*.y);
+        if cmpy != 0 {
+            return cmpy;
+        }
+        return 0;
     }
 }
 

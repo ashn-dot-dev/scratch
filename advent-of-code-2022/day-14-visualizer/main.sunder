@@ -12,13 +12,13 @@ struct coordinate {
     }
 
     func compare(lhs: *coordinate, rhs: *coordinate) ssize {
-        var cmpx = std::compare[[sint]](&lhs.*.x, &rhs.*.x);
-        var cmpy = std::compare[[sint]](&lhs.*.y, &rhs.*.y);
+        var cmpx = sint::cmp(lhs.*.x, rhs.*.x);
         if cmpx != 0 {
-            return (:ssize)cmpx;
+            return cmpx;
         }
+        var cmpy = sint::cmp(lhs.*.y, rhs.*.y);
         if cmpy != 0 {
-            return (:ssize)cmpy;
+            return cmpy;
         }
         return 0;
     }
