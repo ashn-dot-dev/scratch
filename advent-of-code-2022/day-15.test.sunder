@@ -1,0 +1,298 @@
+import "std";
+
+struct coordinate {
+    var x: ssize;
+    var y: ssize;
+
+    func hash(self: *coordinate) usize {
+        var h = self.*.x.hash() +% self.*.y.hash();
+        return h *% h;
+    }
+
+    func compare(lhs: *coordinate, rhs: *coordinate) ssize {
+        var cmpx = ssize::cmp(lhs.*.x, rhs.*.x);
+        if cmpx != 0 {
+            return cmpx;
+        }
+        var cmpy = ssize::cmp(lhs.*.y, rhs.*.y);
+        if cmpy != 0 {
+            return cmpy;
+        }
+        return 0;
+    }
+}
+
+struct span {
+    var min: ssize;
+    var max: ssize;
+
+    func init(min: ssize, max: ssize) span {
+        assert min <= max;
+        return (:span){.min = min, .max = max};
+    }
+
+    func init_merge(a: span, b: span) span {
+        assert span::is_overlapping(a, b);
+        return span::init(ssize::min(a.min, b.min), ssize::max(a.max, b.max));
+    }
+
+    func is_overlapping(a: span, b: span) bool {
+        if a.min > b.max {
+            return false;
+        }
+        if a.max < b.min {
+            return false;
+        }
+        return true;
+    }
+}
+
+struct sensor {
+    var coordinate: coordinate;
+    var distance: ssize;
+}
+
+func extract[[T]](str: []byte, start: usize) T {
+    var cur = start;
+    for cur != countof(str) and (str[cur] == '-' or std::ascii::is_digit(str[cur])) {
+        cur = cur + 1;
+    }
+
+    var int = T::init_from_str(str[start:cur], 10);
+    return int.value();
+}
+
+func distance(a: ssize, b: ssize) ssize {
+    return ssize::abs(a - b);
+}
+
+func manhattan_distance(a: coordinate, b: coordinate) ssize {
+    var distance_x = distance(a.x, b.x);
+    var distance_y = distance(a.y, b.y);
+    return distance_x + distance_y;
+}
+
+func display(sensors: []sensor, beacons: *std::hash_set[[coordinate]], rows: span, cols: span) void {
+    var col = cols.min - (:ssize)countof("0 ");
+    for col <= cols.max {
+        defer { col = col + 1; }
+        if col == 0 {
+            std::print(std::out(), "0");
+        }
+        else {
+            std::print(std::out(), " ");
+        }
+    }
+    std::print(std::out(), "\n");
+
+    var row = rows.min;
+    for row <= rows.max {
+        defer { row = row + 1; }
+        if row == 0 {
+            std::print(std::out(), "0 ");
+        }
+        else {
+            std::print(std::out(), "  ");
+        }
+
+        var col = cols.min;
+        for col <= cols.max {
+            defer { col = col + 1; }
+
+            var is_sensor = false;
+            var is_beacon = false;
+            var is_coverage = false;
+            for i in countof(sensors) {
+                if sensors[i].coordinate.x == col and sensors[i].coordinate.y == row {
+                    is_sensor = true;
+                }
+
+                var distance = manhattan_distance(
+                    (:coordinate){.x = col, .y = row},
+                    (:coordinate){.x = sensors[i].coordinate.x, .y = sensors[i].coordinate.y}
+                );
+                if distance <= sensors[i].distance {
+                    is_coverage = true;
+                }
+            }
+
+            var iter = std::hash_set_iterator[[coordinate]]::init(beacons);
+            for iter.advance() {
+                if iter.current().*.x == col and iter.current().*.y == row {
+                    is_beacon = true;
+                    break;
+                }
+            }
+
+            if (is_sensor) {
+                std::print(std::out(), "S");
+            }
+            elif (is_beacon) {
+                std::print(std::out(), "B");
+            }
+            elif (is_coverage) {
+                std::print(std::out(), "#");
+            }
+            else {
+                std::print(std::out(), ".");
+            }
+        }
+        std::print_format_line(
+            std::out(), " {}",
+            (:[]std::formatter)[std::formatter::init[[ssize]](&row)]);
+    }
+}
+
+func main() void {
+    var parser = std::argument_parser::init((:[][]byte)[
+        "d",
+        "display",
+        "e",
+        "example",
+    ]);
+    var opt_display = false;
+    var opt_example = false;
+    for parser.advance() {
+        if parser.check_option("d") or parser.check_option("display") {
+            opt_display = true;
+            continue;
+        }
+        if parser.check_option("e") or parser.check_option("example") {
+            opt_example = true;
+            continue;
+        }
+        var arg = parser.argument_value();
+        std::print_format_line(
+            std::err(),
+            "invalid argument `{}`",
+            (:[]std::formatter)[std::formatter::init[[typeof(arg)]](&arg)]);
+        std::exit(std::EXIT_FAILURE);
+    }
+
+    var path = "day-15.input";
+    if opt_example {
+        path = "day-15.input.example";
+    }
+
+    var result = std::file::open(path, std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+    var result = std::read_all(reader);
+    var input = std::ascii::view_trimmed(result.value());
+
+    var lines = std::str::split(input, "\n");
+    defer std::slice[[[]byte]]::delete(lines);
+
+    var sensors = std::vector[[sensor]]::init();
+    defer sensors.fini();
+    var beacons = std::hash_set[[coordinate]]::init();
+    defer beacons.fini();
+    var max_distance = 0s;
+    var min_x = 0s;
+    var max_x = 0s;
+    var min_y = 0s;
+    var max_y = 0s;
+
+    var iter = std::slice_iterator[[[]byte]]::init(lines);
+    for iter.advance() {
+        var line = *iter.current();
+
+        var start = std::str::find(line, "x=");
+        var sensor_x = extract[[ssize]](line, start.value() + countof("x="));
+        var start = std::str::find(line, "y=");
+        var sensor_y = extract[[ssize]](line, start.value() + countof("y="));
+        var sensor_coordinate = (:coordinate){.x = sensor_x, .y = sensor_y};
+
+        var start = std::str::find(line, "beacon");
+        var str = line[start.value():countof(line)];
+        var start = std::str::find(str, "x=");
+        var beacon_x = extract[[ssize]](str, start.value() + countof("x="));
+        var start = std::str::find(str, "y=");
+        var beacon_y = extract[[ssize]](str, start.value() + countof("y="));
+        var beacon_coordinate = (:coordinate){.x = beacon_x, .y = beacon_y};
+
+        var sensor_distance =
+            manhattan_distance(sensor_coordinate, beacon_coordinate);
+
+        sensors.push((:sensor){
+            .coordinate = sensor_coordinate,
+            .distance = sensor_distance,
+        });
+        if not beacons.contains(beacon_coordinate) {
+            beacons.insert(beacon_coordinate);
+        }
+
+        max_distance = ssize::max(max_distance, sensor_distance);
+        min_x = ssize::min(min_x, ssize::min(sensor_x, beacon_x));
+        max_x = ssize::max(max_x, ssize::max(sensor_x, beacon_x));
+        min_y = ssize::min(min_y, ssize::min(sensor_y, beacon_y));
+        max_y = ssize::max(max_y, ssize::max(sensor_y, beacon_y));
+    }
+
+    var sensors = sensors.data();
+
+    var rows = span::init(min_y - max_distance, max_y + max_distance);
+    var cols = span::init(min_x - max_distance, max_x + max_distance);
+
+    if opt_display {
+        display(sensors, &beacons, rows, cols);
+    }
+
+    var ROW = 2000000s;
+    if opt_example {
+        ROW = 10s;
+    }
+
+    var spans = std::vector[[span]]::init();
+    defer spans.fini();
+    for i in countof(sensors) {
+        var remaining = sensors[i].distance - distance(sensors[i].coordinate.y, ROW);
+        if remaining < 0 {
+            continue;
+        }
+        var span = span::init(
+            sensors[i].coordinate.x - remaining,
+            sensors[i].coordinate.x + remaining);
+        spans.push(span);
+    }
+
+    var finished_merging = false;
+    for not finished_merging {
+        for i in spans.count() {
+            if i == spans.count() - 1 {
+                finished_merging = true;
+                break;
+            }
+            if span::is_overlapping(spans.data()[i], spans.data()[i+1]) {
+                var a = spans.remove(i);
+                var b = spans.remove(i);
+                spans.insert(i, span::init_merge(a, b));
+                break;
+            }
+        }
+    }
+
+    var part1_answer = 0s;
+    for i in spans.count() {
+        part1_answer = part1_answer + (spans.data()[i].max - spans.data()[i].min) + 1;
+    }
+    for i in countof(sensors) {
+        if sensors[i].coordinate.y == ROW {
+            part1_answer = part1_answer - 1;
+        }
+    }
+    var iter = std::hash_set_iterator[[coordinate]]::init(&beacons);
+    for iter.advance() {
+        if iter.current().*.y == ROW {
+            part1_answer = part1_answer - 1;
+        }
+    }
+    std::print_format_line(
+        std::out(),
+        "PART 1: {}",
+        (:[]std::formatter)[std::formatter::init[[ssize]](&part1_answer)]);
+}
+################################################################################
+# PART 1: 4665948
