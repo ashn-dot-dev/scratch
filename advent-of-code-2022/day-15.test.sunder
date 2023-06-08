@@ -32,15 +32,15 @@ struct span {
     }
 
     func init_merge(a: span, b: span) span {
-        assert span::is_overlapping(a, b);
+        assert span::is_connected(a, b);
         return span::init(ssize::min(a.min, b.min), ssize::max(a.max, b.max));
     }
 
-    func is_overlapping(a: span, b: span) bool {
-        if a.min > b.max {
+    func is_connected(a: span, b: span) bool {
+        if a.min > b.max + 1 {
             return false;
         }
-        if a.max < b.min {
+        if a.max < b.min - 1 {
             return false;
         }
         return true;
@@ -138,8 +138,44 @@ func display(sensors: []sensor, beacons: *std::hash_set[[coordinate]], rows: spa
             }
         }
         std::print_format_line(
-            std::out(), " {}",
+            std::out(),
+            " {}",
             (:[]std::formatter)[std::formatter::init[[ssize]](&row)]);
+    }
+}
+
+func coverage(sensors: []sensor, row: ssize, spans: *std::vector[[span]]) void {
+    spans.*.resize(0);
+
+    for i in countof(sensors) {
+        var remaining = sensors[i].distance - distance(sensors[i].coordinate.y, row);
+        if remaining < 0 {
+            continue;
+        }
+        var span = span::init(
+            sensors[i].coordinate.x - remaining,
+            sensors[i].coordinate.x + remaining);
+        spans.*.push(span);
+    }
+
+    var finished_merging = false;
+    for not finished_merging {
+        finished_merging = true;
+        for i in 0:spans.*.count()-1 {
+            for j in i+1:spans.*.count() {
+                if span::is_connected(spans.*.data()[i], spans.*.data()[j]) {
+                    finished_merging = false;
+                    var a = spans.*.remove(j);
+                    var b = spans.*.remove(i);
+                    spans.*.push(span::init_merge(a, b));
+                    break;
+                }
+            }
+
+            if not finished_merging {
+                break;
+            }
+        }
     }
 }
 
@@ -247,32 +283,7 @@ func main() void {
 
     var spans = std::vector[[span]]::init();
     defer spans.fini();
-    for i in countof(sensors) {
-        var remaining = sensors[i].distance - distance(sensors[i].coordinate.y, ROW);
-        if remaining < 0 {
-            continue;
-        }
-        var span = span::init(
-            sensors[i].coordinate.x - remaining,
-            sensors[i].coordinate.x + remaining);
-        spans.push(span);
-    }
-
-    var finished_merging = false;
-    for not finished_merging {
-        for i in spans.count() {
-            if i == spans.count() - 1 {
-                finished_merging = true;
-                break;
-            }
-            if span::is_overlapping(spans.data()[i], spans.data()[i+1]) {
-                var a = spans.remove(i);
-                var b = spans.remove(i);
-                spans.insert(i, span::init_merge(a, b));
-                break;
-            }
-        }
-    }
+    coverage(sensors, ROW, &spans);
 
     var part1_answer = 0s;
     for i in spans.count() {
@@ -293,6 +304,50 @@ func main() void {
         std::out(),
         "PART 1: {}",
         (:[]std::formatter)[std::formatter::init[[ssize]](&part1_answer)]);
+
+    # Tuning frequency, f, is found by multiplying the beacon's x-coordinate by
+    # M = 4000000 and adding the beacon's y-coordinate.
+    #
+    # f = x * M + y;
+    let M = 4000000s;
+    var SEARCH_MIN = 0s;
+    var SEARCH_MAX = M;
+    if opt_example {
+        SEARCH_MAX = 20s;
+    }
+
+    var part2_answer = 0s;
+    var y = SEARCH_MIN;
+    for y <= SEARCH_MAX {
+        defer { y = y + 1; }
+
+        coverage(sensors, y, &spans);
+        if spans.count() != 1 {
+            # There should only be one answer for part two, and that answer
+            # should have exactly one pair of disjoint spans.
+            assert spans.count() == 2;
+
+            var lower = spans.data()[0];
+            var upper = spans.data()[1];
+            if upper.min < lower.min {
+                std::swap[[span]](&lower, &upper);
+            }
+
+            # The disjoint spans should be separated by exactly one coordinate,
+            # (i.e. the single answer for part two).
+            assert lower.max + 1 == upper.min - 1;
+
+            var x = lower.max + 1;
+            part2_answer = x * M + y;
+            break;
+        }
+    }
+
+    std::print_format_line(
+        std::out(),
+        "PART 2: {}",
+        (:[]std::formatter)[std::formatter::init[[ssize]](&part2_answer)]);
 }
 ################################################################################
 # PART 1: 4665948
+# PART 2: 13543690671045
