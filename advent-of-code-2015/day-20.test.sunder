@@ -1,5 +1,4 @@
 import "std";
-import "../integer-square-root/integer-square-root.sunder";
 
 let INPUT = 29000000u;
 
@@ -23,7 +22,7 @@ func main() void {
         var part2_presents = 0u;
 
         # Maximum divisior we need to check, excluding the house itself.
-        var sqrt = isqrt[[usize]](house);
+        var sqrt = usize::isqrt(house);
         for i in 1:(sqrt + 1) {
             if house % i != 0 {
                 continue;
