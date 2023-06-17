@@ -65,8 +65,7 @@ struct context {
     var ball: ball;
     var p1_score: usize;
     var p2_score: usize;
-    var font_score: *oat_font;
-    var font_serve: *oat_font;
+    var font: *oat_font;
 
     func init(screen_w: f32, screen_h: f32) context {
         return (:context){
@@ -102,14 +101,12 @@ struct context {
             },
             .p1_score = 0,
             .p2_score = 0,
-            .font_score = oat_font_new_ttf_from_mem(startof(public_pixel_ttf), countof(public_pixel_ttf), 80),
-            .font_serve = oat_font_new_ttf_from_mem(startof(public_pixel_ttf), countof(public_pixel_ttf), 48),
+            .font = oat_font_new_ttf_from_mem(startof(public_pixel_ttf), countof(public_pixel_ttf)),
         };
     }
 
     func fini(self: *context) void {
-        oat_font_del(self.*.font_score);
-        oat_font_del(self.*.font_serve);
+        oat_font_del(self.*.font);
     }
 }
 
@@ -283,12 +280,13 @@ func render(ctx: *context) void {
     defer text.fini();
     var text_w: sint = uninit;
     var text_h: sint = uninit;
-    oat_measure_text(text.cstr(), ctx.*.font_score, &text_w, &text_h);
+    oat_measure_text(text.cstr(), ctx.*.font, 80, &text_w, &text_h);
     oat_draw_text(
         text.cstr(),
         (:sint)((:f32)screen_w * 0.5) - text_w - SCORE_OFFSET_X,
         SCORE_OFFSET_Y,
-        ctx.*.font_score,
+        ctx.*.font,
+        80,
         0xFF,
         0xFF,
         0xFF,
@@ -300,12 +298,13 @@ func render(ctx: *context) void {
     defer text.fini();
     var text_w: sint = uninit;
     var text_h: sint = uninit;
-    oat_measure_text(text.cstr(), ctx.*.font_score, &text_w, &text_h);
+    oat_measure_text(text.cstr(), ctx.*.font, 80, &text_w, &text_h);
     oat_draw_text(
         text.cstr(),
         (:sint)((:f32)screen_w * 0.5) + SCORE_OFFSET_X,
         SCORE_OFFSET_Y,
-        ctx.*.font_score,
+        ctx.*.font,
+        80,
         0xFF,
         0xFF,
         0xFF,
@@ -317,12 +316,13 @@ func render(ctx: *context) void {
         let text = startof("PRESS SPACE");
         var text_w: sint = uninit;
         var text_h: sint = uninit;
-        oat_measure_text(text, ctx.*.font_serve, &text_w, &text_h);
+        oat_measure_text(text, ctx.*.font, 48, &text_w, &text_h);
         oat_draw_text(
             text,
             (:sint)((:f32)screen_w * 0.5 - (:f32)text_w * 0.5),
             (:sint)((:f32)screen_h * 0.5 - (:f32)text_h - PRESS_SPACE_OFFSET_Y),
-            ctx.*.font_serve,
+            ctx.*.font,
+            48,
             0xFF,
             0xFF,
             0xFF,
