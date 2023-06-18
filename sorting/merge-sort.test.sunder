@@ -1,5 +1,5 @@
 import "std";
-import "jort-sort.sunder";
+import "merge-sort.sunder";
 
 func display[[T]](slice: []T) void {
     for i in countof(slice) {
@@ -13,39 +13,33 @@ func display[[T]](slice: []T) void {
 
 func test[[T]](slice: []T) void {
     display[[T]](slice);
-    var was_sorted = jort_sort[[T]](slice);
+    merge_sort[[T]](slice);
     display[[T]](slice);
-
-    if was_sorted {
-        std::print_line(std::out(), "slice was already sorted");
-    }
-    else {
-        std::print_line(std::out(), "slice was not already sorted");
-    }
 }
 
 func main() void {
-    test[[ssize]]((:[]ssize)[1, 7, 10]);
+    test[[ssize]]((:[]ssize)[1, 2, 3]);
     std::print(std::out(), "\n");
-    test[[ssize]]((:[]ssize)[10, 7, 1]);
+    test[[ssize]]((:[]ssize)[3, 1, 2]);
     std::print(std::out(), "\n");
-    test[[[]byte]]((:[][]byte)["apple", "banana", "carrot"]);
+    test[[ssize]]((:[]ssize)[2, 3, 1]);
+    std::print(std::out(), "\n");
+    test[[ssize]]((:[]ssize)[3, 2, 1]);
     std::print(std::out(), "\n");
     test[[[]byte]]((:[][]byte)["carrot", "banana", "apple"]);
 }
 ################################################################################
-# 1, 7, 10
-# 1, 7, 10
-# slice was already sorted
+# 1, 2, 3
+# 1, 2, 3
 #
-# 10, 7, 1
-# 1, 7, 10
-# slice was not already sorted
+# 3, 1, 2
+# 1, 2, 3
 #
-# apple, banana, carrot
-# apple, banana, carrot
-# slice was already sorted
+# 2, 3, 1
+# 1, 2, 3
+#
+# 3, 2, 1
+# 1, 2, 3
 #
 # carrot, banana, apple
 # apple, banana, carrot
-# slice was not already sorted
