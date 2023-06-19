@@ -1,0 +1,168 @@
+import "std";
+
+func extract[[T]](str: []byte, start: usize) T {
+    var cur = start;
+    for cur != countof(str) and (str[cur] == '-' or std::ascii::is_digit(str[cur])) {
+        cur = cur + 1;
+    }
+
+    var int = T::init_from_str(str[start:cur], 10);
+    return int.value();
+}
+
+struct valve {
+    var name: []byte;
+    var rate: ssize;
+    var neighbors: [][]byte;
+
+    func format(self: *valve, writer: std::writer, fmt: []byte) std::result[[void, std::error]] {
+        if countof(fmt) != 0 {
+            return std::result[[void, std::error]]::init_error(std::error::INVALID_ARGUMENT);
+        }
+
+        var neighbors = std::string::init();
+        defer neighbors.fini();
+        var neighbors_writer = std::writer::init[[std::string]](&neighbors);
+        for i in countof(self.*.neighbors) {
+            if i != 0 {
+                var result = std::write_all(neighbors_writer, ", ");
+                if result.is_error() {
+                    return result;
+                }
+            }
+            var result = std::write_all(neighbors_writer, self.*.neighbors[i]);
+            if result.is_error() {
+                return result;
+            }
+        }
+
+        return std::write_format(
+            writer,
+            "{}name = {}, rate = {}, neighbors = [{}]{}",
+            (:[]std::formatter)[
+                std::formatter::init[[[]byte]](&"{"),
+                std::formatter::init[[typeof(self.*.name)]](&self.*.name),
+                std::formatter::init[[typeof(self.*.rate)]](&self.*.rate),
+                std::formatter::init[[typeof(neighbors)]](&neighbors),
+                std::formatter::init[[[]byte]](&"}")]);
+    }
+}
+
+struct action {
+    let KIND_OPEN = 0u;
+    let KIND_GOTO = 0u;
+
+    var prev: *action; # nullable
+    var kind: usize;
+    var goto: []byte; # KIND_GOTO
+
+    # How many minutes have elapsed when this action has been completed.
+    func minutes(self: *action) usize {
+        if self == std::ptr[[action]]::NULL {
+            return 0;
+        }
+        return minutes(self.*.prev) + 1;
+    }
+
+    # The current valve when this action has been completed.
+    func current(self: *action, initial: []byte) []byte {
+        if self == std::ptr[[action]]::NULL {
+            return initial;
+        }
+        if self.*.kind == action::KIND_GOTO {
+            return self.*.goto;
+        }
+        return current(self.*.prev, initial);
+    }
+
+    # True if the current valve has been opened.
+    func current_is_open(self: *action, initial: []byte) bool {
+        var current = action::current(self, initial);
+
+        for self != std::ptr[[action]]::NULL {
+            var self_eq_current = std::str::eq(current, action::current(self, initial));
+            if self_eq_current and self.*.kind == action::KIND_OPEN {
+                return true;
+            }
+            self = self.*.prev;
+        }
+
+        return false;
+    }
+
+    func explore_sequences(self: *action, sequences: *std::vector[[action]]) void {
+        var minutes = action::minutes(self);
+        if minutes == 30 {
+            sequences.*.push(self);
+            return;
+        }
+
+        if not self.*.current_is_open() {
+            balsdakjdlkasjldsalkjsak I should do this in python
+        }
+    }
+}
+
+func main() void {
+    var result = std::file::open("day-16.input", std::file::OPEN_READ);
+    var file = result.value();
+    defer file.close();
+
+    var reader = std::reader::init[[typeof(file)]](&file);
+    var result = std::read_all(reader);
+    var input = std::ascii::view_trimmed(result.value());
+
+    var lines = std::str::split(input, "\n");
+    defer std::slice[[[]byte]]::delete(lines);
+
+    var valves = std::hash_map[[[]byte, valve]]::init();
+    defer valves.fini();
+
+    var initial = std::optional[[[]byte]]::EMPTY;
+
+    var iter = std::slice_iterator[[[]byte]]::init(lines);
+    for iter.advance() {
+        var line = *iter.current();
+
+        var start = countof("Valve "); # "Valve XX has..."
+        var name = line[start:start+2]; # AA, FF, JJ, etc.
+        if initial.is_empty() {
+            initial = std::optional[[[]byte]]::init_value(name);
+        }
+
+        var start = std::str::find(line, "rate="); # "...flow rate=X;..."
+        var rate = extract[[ssize]](line, start.value() + countof("rate="));
+
+        var start = std::str::find(line, "valves "); # "tunnels lead to valves..."
+        var offset = countof("valves ");
+        if start.is_empty() {
+            start = std::str::find(line, "valve "); # "tunnels lead to valve..."
+            offset = countof("valve ");
+        }
+        var neighbors = line[start.value()+offset:countof(line)];
+        var neighbors = std::str::split(neighbors, ", "); # leak
+
+        var valve = (:valve){
+            .name = name,
+            .rate = rate,
+            .neighbors = neighbors,
+        };
+        valves.insert(name, valve);
+
+        std::print_format_line(
+            std::out(),
+            "{}\n\t{}",
+            (:[]std::formatter)[
+                std::formatter::init[[typeof(line)]](&line),
+                std::formatter::init[[typeof(valve)]](&valve)]);
+    }
+
+    var initial = initial.value();
+    var current = initial;
+    std::print_line(std::out(), current);
+
+    var sequences = std::vector[[action]]::init();
+    defer sequences.fini();
+
+}
+################################################################################
