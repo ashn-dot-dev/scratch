@@ -9,7 +9,7 @@ func priority(char: byte) usize {
         return ((:usize)char - 'a') + 1;
     }
 
-    assert false; # unreachable
+    std::unreachable(fileof(), lineof());
     return std::zeroed[[usize]]();
 }
 

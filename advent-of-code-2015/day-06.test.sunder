@@ -103,7 +103,7 @@ func main() void {
             continue;
         }
 
-        assert false; # unreachable
+        std::unreachable(fileof(), lineof());
     }
 
     var part1_answer = 0u;

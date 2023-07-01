@@ -209,7 +209,7 @@ struct big_decimal {
                 output.insert(0u, digit);
             }
             else {
-                std::panic("unreachable");
+                std::unreachable(fileof(), lineof());
             }
 
             std::big_integer::assign(&tmp, &div);
@@ -236,7 +236,7 @@ struct big_decimal {
                 output.insert(0u, digit);
             }
             else {
-                std::panic("unreachable");
+                std::unreachable(fileof(), lineof());
             }
 
             std::big_integer::assign(&tmp, &div);

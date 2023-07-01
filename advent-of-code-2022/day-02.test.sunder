@@ -14,7 +14,7 @@ func normalize(choice: byte) usize {
         return (:usize)choice - 'X' + 1;
     }
 
-    assert false; # unreachable
+    std::unreachable(fileof(), lineof());
     return 0;
 }
 

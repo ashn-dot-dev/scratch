@@ -71,7 +71,7 @@ struct circuit {
             return self.*.val.value();
         }
 
-        assert false; # unreachable
+        std::unreachable(fileof(), lineof());
         return 0;
     }
 }
