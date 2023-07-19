@@ -165,10 +165,10 @@ func main() void {
         var upper_floor_y = upper_y;
         var floor_w = upper_floor_x - lower_floor_x;
         var floor_h = upper_floor_y - lower_floor_y;
-        for i in (:usize)floor_w {
-            for j in (:usize)floor_h {
-                var x = lower_floor_x + (:sint)i;
-                var y = lower_floor_y + (:sint)j;
+        for i: sint in floor_w {
+            for j: sint in floor_h {
+                var x = lower_floor_x + i;
+                var y = lower_floor_y + j;
                 cave.insert((:coordinate){.x = x, .y = y}, ROCK);
             }
         }
