@@ -109,15 +109,14 @@ func main() void {
         }
 
         # Line from ls listing files in the current directory.
-        var fields = std::str::split(line, " ");
-        defer std::slice[[[]byte]]::delete(fields);
-        var name = fields[1];
+        var fields = std::str::cut(line, " ");
+        var name = fields.value().suffix;
 
         if dir.*.entries.contains(name) {
             continue; # Already added.
         }
 
-        if std::str::eq(fields[0], "dir") {
+        if std::str::eq(fields.value().prefix, "dir") {
             var new = std::new[[directory]]();
             *new = directory::init(name, dir);
             dir.*.entries.insert(name, entry::init[[directory]](new));
@@ -125,7 +124,7 @@ func main() void {
             continue;
         }
 
-        var result = usize::init_from_str(fields[0], 10);
+        var result = usize::init_from_str(fields.value().prefix, 10);
         var size = result.value();
         var new = std::new[[::file]]();
         *new = ::file::init(name, size);

@@ -96,19 +96,18 @@ func main() void {
     for iter.advance() {
         var line = *iter.current();
 
-        var split = std::str::split(line, " -> ");
-        defer std::slice[[[]byte]]::delete(split);
+        var cut = std::str::cut(line, " -> ");
 
-        var in_ = split[0];
-        var out = split[1];
+        var in_ = cut.value().prefix;
+        var out = cut.value().suffix;
 
         if std::str::contains(in_, "NOT") {
-            var split = std::str::split(in_, "NOT ");
-            defer std::slice[[[]byte]]::delete(split);
+            var cut = std::str::cut(in_, "NOT ");
+            var cut = cut.value();
             circuits.insert(out, (:circuit){
                 .gate = circuit::GATE_NOT,
                 .lhs = uninit,
-                .rhs = split[1],
+                .rhs = cut.suffix,
                 .out = out,
                 .val = std::optional[[u16]]::EMPTY,
             });
@@ -116,12 +115,12 @@ func main() void {
         }
 
         if std::str::contains(in_, "AND") {
-            var split = std::str::split(in_, " AND ");
-            defer std::slice[[[]byte]]::delete(split);
+            var cut = std::str::cut(in_, " AND ");
+            var cut = cut.value();
             circuits.insert(out, (:circuit){
                 .gate = circuit::GATE_AND,
-                .lhs = split[0],
-                .rhs = split[1],
+                .lhs = cut.prefix,
+                .rhs = cut.suffix,
                 .out = out,
                 .val = std::optional[[u16]]::EMPTY,
             });
@@ -129,12 +128,12 @@ func main() void {
         }
 
         if std::str::contains(in_, "OR") {
-            var split = std::str::split(in_, " OR ");
-            defer std::slice[[[]byte]]::delete(split);
+            var cut = std::str::cut(in_, " OR ");
+            var cut = cut.value();
             circuits.insert(out, (:circuit){
                 .gate = circuit::GATE_OR,
-                .lhs = split[0],
-                .rhs = split[1],
+                .lhs = cut.prefix,
+                .rhs = cut.suffix,
                 .out = out,
                 .val = std::optional[[u16]]::EMPTY,
             });
@@ -142,12 +141,12 @@ func main() void {
         }
 
         if std::str::contains(in_, "LSHIFT") {
-            var split = std::str::split(in_, " LSHIFT ");
-            defer std::slice[[[]byte]]::delete(split);
+            var cut = std::str::cut(in_, " LSHIFT ");
+            var cut = cut.value();
             circuits.insert(out, (:circuit){
                 .gate = circuit::GATE_LSHIFT,
-                .lhs = split[0],
-                .rhs = split[1],
+                .lhs = cut.prefix,
+                .rhs = cut.suffix,
                 .out = out,
                 .val = std::optional[[u16]]::EMPTY,
             });
@@ -155,12 +154,12 @@ func main() void {
         }
 
         if std::str::contains(in_, "RSHIFT") {
-            var split = std::str::split(in_, " RSHIFT ");
-            defer std::slice[[[]byte]]::delete(split);
+            var cut = std::str::cut(in_, " RSHIFT ");
+            var cut = cut.value();
             circuits.insert(out, (:circuit){
                 .gate = circuit::GATE_RSHIFT,
-                .lhs = split[0],
-                .rhs = split[1],
+                .lhs = cut.prefix,
+                .rhs = cut.suffix,
                 .out = out,
                 .val = std::optional[[u16]]::EMPTY,
             });

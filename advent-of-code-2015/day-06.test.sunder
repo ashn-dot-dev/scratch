@@ -33,19 +33,17 @@ func main() void {
 
         if std::str::starts_with(line, "turn on") or std::str::starts_with(line, "turn off") {
             var a = fields[2];
-            var a_fields = std::str::split(a, ",");
-            defer std::slice[[[]byte]]::delete(a_fields);
-            var result = usize::init_from_str(a_fields[0], 10);
+            var a_cut = std::str::cut(a, ",");
+            var result = usize::init_from_str(a_cut.value().prefix, 10);
             var a_x = result.value();
-            var result = usize::init_from_str(a_fields[1], 10);
+            var result = usize::init_from_str(a_cut.value().suffix, 10);
             var a_y = result.value();
 
             var b = fields[4];
-            var b_fields = std::str::split(b, ",");
-            defer std::slice[[[]byte]]::delete(b_fields);
-            var result = usize::init_from_str(b_fields[0], 10);
+            var b_cut = std::str::cut(b, ",");
+            var result = usize::init_from_str(b_cut.value().prefix, 10);
             var b_x = result.value();
-            var result = usize::init_from_str(b_fields[1], 10);
+            var result = usize::init_from_str(b_cut.value().suffix, 10);
             var b_y = result.value();
 
             var state = std::str::starts_with(line, "turn on");

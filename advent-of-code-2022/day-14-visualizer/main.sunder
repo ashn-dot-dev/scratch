@@ -86,19 +86,17 @@ func main() void {
             var bgn = coordinates[i-1];
             var end = coordinates[i];
 
-            var xy = std::str::split(bgn, ",");
-            defer std::slice[[[]byte]]::delete(xy);
-            var x = sint::init_from_str(xy[0], 10);
-            var y = sint::init_from_str(xy[1], 10);
+            var xy = std::str::cut(bgn, ",");
+            var x = sint::init_from_str(xy.value().prefix, 10);
+            var y = sint::init_from_str(xy.value().suffix, 10);
             var bgn = (:coordinate){
                 .x = x.value(),
                 .y = y.value(),
             };
 
-            var xy = std::str::split(end, ",");
-            defer std::slice[[[]byte]]::delete(xy);
-            var x = sint::init_from_str(xy[0], 10);
-            var y = sint::init_from_str(xy[1], 10);
+            var xy = std::str::cut(end, ",");
+            var x = sint::init_from_str(xy.value().prefix, 10);
+            var y = sint::init_from_str(xy.value().suffix, 10);
             var end = (:coordinate){
                 .x = x.value(),
                 .y = y.value(),

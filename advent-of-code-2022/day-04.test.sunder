@@ -5,14 +5,9 @@ struct assignment {
     var hi: usize;
 
     func init_from_str(str: []byte) assignment {
-        var buf = (:[64]byte)[0...];
-        var allocator = std::linear_allocator::init(buf[0:countof(buf)]);
-        var allocator = std::allocator::init[[std::linear_allocator]](&allocator);
-        var sections = std::str::split_with_allocator(allocator, str, "-");
-        assert countof(sections) == 2;
-
-        var lo = usize::init_from_str(sections[0], 10);
-        var hi = usize::init_from_str(sections[1], 10);
+        var sections = std::str::cut(str, "-");
+        var lo = usize::init_from_str(sections.value().prefix, 10);
+        var hi = usize::init_from_str(sections.value().suffix, 10);
         return (:assignment){.lo = lo.value(), .hi = hi.value()};
     }
 }
@@ -35,12 +30,9 @@ func main() void {
         var line = optional.value();
         defer std::slice[[byte]]::delete(line);
 
-        var assignments = std::str::split(line, ",");
-        defer std::slice[[[]byte]]::delete(assignments);
-
-        assert countof(assignments) == 2;
-        var elf_a = assignment::init_from_str(assignments[0]);
-        var elf_b = assignment::init_from_str(assignments[1]);
+        var assignments = std::str::cut(line, ",");
+        var elf_a = assignment::init_from_str(assignments.value().prefix);
+        var elf_b = assignment::init_from_str(assignments.value().suffix);
 
         var a_contains_b = elf_a.lo <= elf_b.lo and elf_a.hi >= elf_b.hi;
         var b_contains_a = elf_b.lo <= elf_a.lo and elf_b.hi >= elf_a.hi;
