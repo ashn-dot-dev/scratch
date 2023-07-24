@@ -102,7 +102,7 @@ func main() void {
     var max_y: ssize = 0;
     var iter = std::hash_map_iterator[[coordinate, tile]]::init(&cave);
     for iter.advance() {
-        max_y = ssize::max(max_y, iter.current().key.*.y);
+        max_y = ssize::max(max_y, iter.current().*.key.*.y);
     }
 
     let SOURCE_X: ssize = 500;
@@ -145,7 +145,7 @@ func main() void {
     var part1_answer: usize = 0;
     var iter = std::hash_map_iterator[[coordinate, tile]]::init(&cave);
     for iter.advance() {
-        part1_answer = part1_answer + (:usize)(iter.current().value.* == SAND);
+        part1_answer = part1_answer + (:usize)(iter.current().*.value.* == SAND);
     }
     std::print_format_line(
         std::out(),
@@ -184,7 +184,7 @@ func main() void {
     var part2_answer: usize = 0;
     var iter = std::hash_map_iterator[[coordinate, tile]]::init(&cave);
     for iter.advance() {
-        part2_answer = part2_answer + (:usize)(iter.current().value.* == SAND);
+        part2_answer = part2_answer + (:usize)(iter.current().*.value.* == SAND);
     }
     std::print_format_line(
         std::out(),

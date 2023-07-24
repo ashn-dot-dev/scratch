@@ -33,7 +33,7 @@ struct directory {
         var size = 0u;
         var iter = std::hash_map_iterator[[[]byte, entry]]::init(&self.*.entries);
         for iter.advance() {
-            size = size + iter.current().value.*.size();
+            size = size + iter.current().*.value.*.size();
         }
         return size;
     }

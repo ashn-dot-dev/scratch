@@ -185,7 +185,7 @@ func main() void {
 
     var iter = std::hash_map_iterator[[[]byte, circuit]]::init(&circuits);
     for iter.advance() {
-        iter.current().value.*.val = std::optional[[u16]]::EMPTY;
+        iter.current().*.value.*.val = std::optional[[u16]]::EMPTY;
     }
     var b = circuits.lookup_view("b");
     var b = b.value().value;

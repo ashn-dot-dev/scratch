@@ -138,10 +138,10 @@ func main() void {
     var max_y: sint = SOURCE_Y;
     var iter = std::hash_map_iterator[[coordinate, tile]]::init(&cave);
     for iter.advance() {
-        min_x = sint::min(min_x, iter.current().key.*.x);
-        max_x = sint::max(max_x, iter.current().key.*.x);
-        min_y = sint::min(min_y, iter.current().key.*.y);
-        max_y = sint::max(max_y, iter.current().key.*.y);
+        min_x = sint::min(min_x, iter.current().*.key.*.x);
+        max_x = sint::max(max_x, iter.current().*.key.*.x);
+        min_y = sint::min(min_y, iter.current().*.key.*.y);
+        max_y = sint::max(max_y, iter.current().*.key.*.y);
     }
 
     var MARGIN: sint = 10;
@@ -229,12 +229,12 @@ func main() void {
         oat_sprite_set_pixel(pixels, SOURCE_X - lower_x, SOURCE_Y - lower_y, 0xFF, 0x00, 0x00, 0xFF);
         var iter = std::hash_map_iterator[[coordinate, tile]]::init(&cave);
         for iter.advance() {
-            var x = iter.current().key.*.x - lower_x;
-            var y = iter.current().key.*.y - lower_y;
-            if (*iter.current().value == ROCK) {
+            var x = iter.current().*.key.*.x - lower_x;
+            var y = iter.current().*.key.*.y - lower_y;
+            if (*iter.current().*.value == ROCK) {
                 oat_sprite_set_pixel(pixels, x, y, 0x00, 0x00, 0x00, 0xFF);
             }
-            if (*iter.current().value == SAND) {
+            if (*iter.current().*.value == SAND) {
                 oat_sprite_set_pixel(pixels, x, y, 0xF0, 0xD0, 0xB0, 0xFF);
             }
         }
