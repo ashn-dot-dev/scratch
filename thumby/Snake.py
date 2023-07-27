@@ -1,5 +1,7 @@
+# /Games/Snake/Snake.py
 import random
 import thumby
+import time
 
 class Position:
     def __init__(self, x, y):
@@ -58,16 +60,14 @@ VELOCITY_D = Velocity(+0, +BLOCK)
 VELOCITY_L = Velocity(-BLOCK, +0)
 VELOCITY_R = Velocity(+BLOCK, +0)
 
-thumby.display.setFPS(60)
+FRAMES_PER_SECOND = 60
+FRAMES_PER_UPDATE = 10
+thumby.display.setFPS(FRAMES_PER_SECOND)
 
-def init():
-    # Flash the screen at boot time to indicate the game is starting.
-    for c in (WHITE, BLACK, WHITE):
-        thumby.display.fill(c)
-        for _ in range(10):
-            thumby.display.update()
-    # Return the initial game state.
-    return State()
+def draw_text_centered(text, font_w, font_h, font_space):
+    text_x = thumby.display.width // 2 - (len(text) * font_w + font_space) // 2
+    text_y = thumby.display.height // 2 - font_h // 2
+    thumby.display.drawText(text, text_x, text_y, WHITE)
 
 def update(state):
     if thumby.buttonU.justPressed() and state.snake.velocity != VELOCITY_D:
@@ -116,11 +116,45 @@ def render(state):
     thumby.display.drawRectangle(state.fruit.x, state.fruit.y, BLOCK, BLOCK, color)
     thumby.display.update()
 
-def main():
-    state = init()
+def game_init():
+    FONT_W = 8
+    FONT_H = 8
+    FONT_SPACE = 1
+    thumby.display.setFont("/lib/font8x8.bin", FONT_W, FONT_H, FONT_SPACE)
+    while not thumby.inputPressed():
+        thumby.display.fill(BLACK)
+        draw_text_centered("SNAKE", FONT_W, FONT_H, FONT_SPACE)
+        thumby.display.update()
+    # Flash to indicate the game is starting.
+    for c in (WHITE, BLACK, WHITE):
+        thumby.display.fill(c)
+        for _ in range(FRAMES_PER_UPDATE):
+            thumby.display.update()
+    return State()
+
+def game_main(state):
     while not state.done:
         update(state)
         render(state)
         state.frame += 1
+
+def game_fini(state):
+    FONT_W = 3
+    FONT_H = 5
+    FONT_SPACE = 1
+    thumby.display.setFont("/lib/font3x5.bin", FONT_W, FONT_H, FONT_SPACE)
+    time.sleep(1)
+    thumby.display.fill(BLACK)
+    draw_text_centered(f"SCORE {len(state.snake.body)}", FONT_W, FONT_H, FONT_SPACE)
+    thumby.display.update()
+    time.sleep(2)
+    while not thumby.inputJustPressed():
+        pass
+
+def main():
+    state = game_init()
+    game_main(state)
+    game_fini(state)
+    thumby.reset()
 
 main()
