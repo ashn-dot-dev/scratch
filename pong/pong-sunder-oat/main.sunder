@@ -4,10 +4,9 @@ import "std";
 
 let WINDOW_W: sint = 800;
 let WINDOW_H: sint = 600;
-let TIMESTEP = 1.0 / FPS;
-let FPS: f64 = 60.0;
+let FPS: sint = 60;
 
-let public_pixel_ttf = embed("../assets/PublicPixel.ttf");
+let public_pixel_ttf = embed("../../assets/PublicPixel.ttf");
 
 struct vec2f32 {
     var x: f32;
@@ -340,17 +339,8 @@ func main() void {
     var ctx = context::init((:f32)oat_screen_get_w(), (:f32)oat_screen_get_h());
     defer ctx.fini();
 
-    var time: double = 0.0;
-    var prev: double = 0.0;
+    oat_set_target_fps(FPS);
     for not oat_get_quit_requested() {
-        var now: double = oat_now();
-        time = time + (now - prev);
-        prev = now;
-        if time <= TIMESTEP {
-            continue;
-        }
-        time = time - TIMESTEP;
-
         update(&ctx);
         render(&ctx);
     }
