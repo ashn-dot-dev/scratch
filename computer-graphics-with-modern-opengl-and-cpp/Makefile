@@ -5,7 +5,7 @@
 	format \
 	clean
 
-CXX=clang++
+CXX=g++
 CXXFLAGS=-std=c++17 -Wall -Wextra -Wconversion -pedantic-errors
 LDFLAGS=-lGL -lGLEW -lglfw
 

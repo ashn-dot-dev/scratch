@@ -115,8 +115,7 @@ main()
 
         float x_translation = 0.5f * std::sin(elapsed.count());
         float y_translation = 0.5f * std::cos(elapsed.count());
-        [[maybe_unused]] float angle = elapsed.count();
-        [[maybe_unused]] float scale = 0.5f + std::sin(elapsed.count()) / 4.0f;
+        float angle = elapsed.count();
 
         /* Clear window (color and depth). */
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
