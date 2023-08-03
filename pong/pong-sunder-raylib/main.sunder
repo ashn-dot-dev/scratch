@@ -4,7 +4,6 @@ import "std";
 
 let WINDOW_W: sint = 800;
 let WINDOW_H: sint = 600;
-let TIMESTEP = 1.0 / FPS;
 let FPS: f64 = 60.0;
 
 struct paddle {
