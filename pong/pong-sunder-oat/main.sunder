@@ -6,7 +6,7 @@ let WINDOW_W: sint = 800;
 let WINDOW_H: sint = 600;
 let FPS: sint = 60;
 
-let public_pixel_ttf = embed("../../assets/PublicPixel.ttf");
+let PUBLIC_PIXEL_TTF = embed("../../assets/PublicPixel.ttf");
 
 struct vec2f32 {
     var x: f32;
@@ -100,7 +100,7 @@ struct context {
             },
             .p1_score = 0,
             .p2_score = 0,
-            .font = oat_font_new_ttf_from_mem(startof(public_pixel_ttf), countof(public_pixel_ttf)),
+            .font = oat_font_new_ttf_from_mem(startof(PUBLIC_PIXEL_TTF), countof(PUBLIC_PIXEL_TTF)),
         };
     }
 
@@ -267,6 +267,13 @@ func render(ctx: *context) void {
         0xFF,
         0xFF
     );
+
+    var s = std::string::init();
+    defer s.fini();
+    var writer = std::writer::init[[typeof(s)]](&s);
+    var fps = oat_get_fps();
+    std::print_format(writer, "FPS: {.1}", (:[]std::formatter)[std::formatter::init[[typeof(fps)]](&fps)]);
+    oat_draw_text(s.cstr(), 2, 2, ctx.*.font, 16, 0x00, 0xAA, 0x00, 0xFF);
 
     var screen_w = oat_screen_get_w();
     var screen_h = oat_screen_get_h();
