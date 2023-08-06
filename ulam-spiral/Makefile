@@ -11,10 +11,9 @@ TARGET=ulam-spiral
 EMCC = emcc
 EMCFLAGS = \
 	$(CFLAGS) \
+	$$($(SUNDER_HOME)/lib/oat/oat-config --emcflags) \
 	-I$(SUNDER_HOME)/lib/oat \
-	-sASSERTIONS -sASYNCIFY -sSINGLE_FILE=1 \
-	-sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sUSE_SDL_MIXER=2 -sUSE_SDL_TTF=2 \
-	-sSDL2_IMAGE_FORMATS=[png] \
+	-sSINGLE_FILE=1 \
 	--shell-file $(SUNDER_HOME)/lib/oat/emscripten-shell.html
 
 all: build build-web
