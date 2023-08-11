@@ -11,14 +11,14 @@ TARGET=hex-grid
 EMCC = emcc
 EMCFLAGS = \
 	$(CFLAGS) \
-	-sASSERTIONS -sASYNCIFY -sSINGLE_FILE=1 \
-	-sUSE_GLFW=3 \
+	$$($(SUNDER_HOME)/lib/raylib/raylib-config web --cflags) \
+	-sSINGLE_FILE=1 \
 	--shell-file $(SUNDER_HOME)/lib/raylib/emscripten-shell.html
 
 all: build-desktop build-web
 
 build-desktop:
-	SUNDER_CFLAGS="$(CFLAGS)"
+	SUNDER_CFLAGS="$(CFLAGS) $$($(SUNDER_HOME)/lib/raylib/raylib-config desktop --cflags)" \
 	sunder-compile \
 		-o $(TARGET) \
 		$$($(SUNDER_HOME)/lib/raylib/raylib-config desktop --libs) \
