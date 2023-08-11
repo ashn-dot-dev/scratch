@@ -126,13 +126,13 @@ func main() void {
     defer CloseWindow();
     SetTargetFPS(60);
 
-    let PUBLIC_PIXEL_TTF = embed("../assets/PublicPixel.ttf");
-    let FONT_SIZE = 16.0f32;
+    let VCR_OSD_MONO_TTF = embed("../assets/VCR_OSD_MONO_1.001.ttf");
+    let FONT_SIZE = 21.0f32;
     let FONT_TTF_DEFAULT_NUMCHARS: sint = 95; # from rtext.c
     var font = LoadFontFromMemory(
         startof(".ttf"),
-        (:*u8)startof(PUBLIC_PIXEL_TTF),
-        (:sint)countof(PUBLIC_PIXEL_TTF),
+        (:*u8)startof(VCR_OSD_MONO_TTF),
+        (:sint)countof(VCR_OSD_MONO_TTF),
         (:sint)FONT_SIZE,
         std::ptr[[sint]]::NULL,
         FONT_TTF_DEFAULT_NUMCHARS);
