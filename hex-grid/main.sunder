@@ -85,13 +85,13 @@ func hex_to_point(hex: cube, radius: f32) Vector2 {
 
 func draw_hexagon(center: Vector2, radius: f32, color: Color) void {
     let SIDES: sint = 6;
-    let ANGLE: f32 = 90.0; # flat-top orientation
+    let ANGLE: f32 = 0.0; # flat-top orientation
     DrawPoly(center, SIDES, radius, ANGLE, color);
 }
 
 func draw_hexagon_outline(center: Vector2, radius: f32, color: Color) void {
     let SIDES: sint = 6;
-    let ANGLE: f32 = 90.0; # flat-top orientation
+    let ANGLE: f32 = 0.0; # flat-top orientation
     DrawPolyLinesEx(center, SIDES, radius, ANGLE, radius / 8.0, color);
 }
 
