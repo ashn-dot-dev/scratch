@@ -1,60 +1,46 @@
 #include <array>
+#include <bitset>
 #include <cassert>
 #include <cstdio>
 #include <vector>
 
-// Small set.
-//
-// Faster than std::set and std::unordered_set for the maximum of 9 characters
-// that will be inserted.
-class digit_set {
-    std::array<char, 9> digits = {0};
+// NOTE: int is faster than std::bitset<9>
+typedef int digit_set;
 
-public:
-    bool insert(char ch)
-    {
-        for (size_t i = 0; i < this->digits.size(); ++i) {
-            if (this->digits[i] == 0) {
-                this->digits[i] = ch;
-                return true;
-            }
-
-            if (this->digits[i] == ch) {
-                return false;
-            }
-        }
-
-        assert(false);
-    }
-};
+constexpr int
+char_to_digit_set_bit(char ch)
+{
+    return 1 << (ch - '0');
+}
 
 bool
 is_valid_sudoku(std::vector<std::vector<char>>& board)
 {
     std::array<digit_set, 9> col_digits{};
     for (size_t row = 0; row < board.size(); ++row) {
-        digit_set row_digits;
+        digit_set row_digits{};
         for (size_t col = 0; col < board.size(); ++col) {
             auto ch = board[row][col];
             if (ch == '.') {
                 continue;
             }
 
-            auto row_inserted = row_digits.insert(ch);
-            if (!row_inserted) {
+            auto bit = char_to_digit_set_bit(ch);
+            if (row_digits & bit) {
+                std::printf("ROW_DIGITS: %x, BIT %x\n", row_digits, bit);
                 return false;
             }
-
-            auto col_inserted = col_digits[col].insert(ch);
-            if (!col_inserted) {
+            row_digits |= bit;
+            if (col_digits[col] & bit) {
                 return false;
             }
+            col_digits[col] |= bit;
         }
     }
 
     // Check sub-boxes.
     auto check_sub_box = [&board](size_t r, size_t c) {
-        digit_set digits;
+        digit_set digits{};
         for (size_t row = r; row < r + 3; ++row) {
             for (size_t col = c; col < c + 3; ++col) {
                 auto ch = board[row][col];
@@ -62,10 +48,11 @@ is_valid_sudoku(std::vector<std::vector<char>>& board)
                     continue;
                 }
 
-                auto inserted = digits.insert(ch);
-                if (!inserted) {
+                auto bit = char_to_digit_set_bit(ch);
+                if (digits & bit) {
                     return false;
                 }
+                digits |= bit;
             }
         }
 
