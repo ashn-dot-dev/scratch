@@ -1,13 +1,13 @@
 #include <algorithm>
 #include <cstdio>
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 std::vector<std::vector<std::string>>
 group_anagrams(std::vector<std::string>& strs)
 {
-    std::map<std::string, std::vector<std::string>> anagrams;
+    std::unordered_map<std::string, std::vector<std::string>> anagrams;
 
     for (size_t i = 0; i < strs.size(); ++i) {
         auto s = strs[i];
