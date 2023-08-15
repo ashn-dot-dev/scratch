@@ -1,19 +1,19 @@
 #include <cassert>
 #include <cstdio>
+#include <unordered_map>
 #include <vector>
 
 std::vector<int>
 two_sum(std::vector<int>& nums, int target)
 {
+    std::unordered_map<int, size_t> map{};
+
     for (size_t i = 0; i < nums.size(); ++i) {
-        for (size_t j = i + 1; j < nums.size(); ++j) {
-            if (nums[i] + nums[j] == target) {
-                std::vector<int> result;
-                result.push_back(i);
-                result.push_back(j);
-                return result;
-            }
+        auto found = map.find(target - nums[i]);
+        if (found != map.end()) {
+            return {(int)found->second, (int)i};
         }
+        map[nums[i]] = i;
     }
 
     assert(false);
