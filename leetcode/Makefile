@@ -13,7 +13,7 @@ CXX=g++
 CXXFLAGS=$(CXXFLAGS_REL)
 
 all: \
-	problem-36-valid-sudoku.out
+	problem-0036-valid-sudoku.out
 
 format:
 	clang-format -i *.cpp
