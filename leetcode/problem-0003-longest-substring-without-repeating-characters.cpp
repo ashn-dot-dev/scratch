@@ -1,33 +1,37 @@
 #include <algorithm>
+#include <array>
+#include <climits>
 #include <cstdio>
+#include <optional>
 #include <string>
-#include <map>
 
 int
 length_of_longest_substring(std::string s)
 {
     int max = 0;
-    std::map<char, size_t> map;
+
+    // The value `mapping[x]` is the index of character x in s.
+    std::array<std::optional<size_t>, 1 << CHAR_BIT> mapping{std::nullopt};
     size_t lo = 0;
     size_t hi = 0;
     while (hi < s.size()) {
-        auto [iter, inserted] = map.insert({s[hi], hi});
-        if (inserted) {
+        auto optional = mapping[s[hi]];
+        if (!optional.has_value()) {
+            mapping[s[hi]] = hi;
             hi += 1;
             continue;
         }
 
-        max = std::max(max, (int)map.size());
+        max = std::max(max, (int)(hi - lo));
 
-        size_t idx = iter->second;
+        size_t idx = optional.value();
         for (size_t i = lo; i <= idx; ++i) {
-            map.erase(s[i]);
+            mapping[s[i]] = std::nullopt;
         }
         lo = idx + 1;
-        continue;
     }
 
-    return std::max(max, (int)map.size());
+    return std::max(max, (int)(hi - lo));
 }
 
 int
