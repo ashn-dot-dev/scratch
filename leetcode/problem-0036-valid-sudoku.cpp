@@ -27,7 +27,6 @@ is_valid_sudoku(std::vector<std::vector<char>>& board)
 
             auto bit = char_to_digit_set_bit(ch);
             if (row_digits & bit) {
-                std::printf("ROW_DIGITS: %x, BIT %x\n", row_digits, bit);
                 return false;
             }
             row_digits |= bit;
