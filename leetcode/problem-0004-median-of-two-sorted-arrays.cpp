@@ -4,9 +4,22 @@
 
 double find_median_sorted_arrays(std::vector<int>& nums1, std::vector<int>& nums2) {
     std::vector<int> nums;
-    nums.insert(nums.end(), nums1.begin(), nums1.end());
-    nums.insert(nums.end(), nums2.begin(), nums2.end());
-    std::sort(nums.begin(), nums.end());
+    size_t i1 = 0;
+    size_t i2 = 0;
+    while (i1 < nums1.size() && i2 < nums2.size()) {
+        if (nums1[i1] < nums2[i2]) {
+            nums.push_back(nums1[i1++]);
+        }
+        else {
+            nums.push_back(nums2[i2++]);
+        }
+    }
+    while (i1 < nums1.size()) {
+            nums.push_back(nums1[i1++]);
+    }
+    while (i2 < nums2.size()) {
+            nums.push_back(nums2[i2++]);
+    }
 
     if (nums.size() % 2 == 0) {
         auto lo = nums[nums.size() / 2 - 1];
