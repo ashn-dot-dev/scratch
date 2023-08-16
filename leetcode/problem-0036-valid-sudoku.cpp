@@ -80,7 +80,8 @@ main(void)
         {'.', '.', '.', '4', '1', '9', '.', '.', '5'},
         {'.', '.', '.', '.', '8', '.', '.', '7', '9'}};
     std::printf(
-        "EXAMPLE 1: %s\n", is_valid_sudoku(example1) ? "true" : "false"); // true
+        "EXAMPLE 1: %s\n",
+        is_valid_sudoku(example1) ? "true" : "false"); // true
 
     std::vector<std::vector<char>> example2 = {
         {'8', '3', '.', '.', '7', '.', '.', '.', '.'},
@@ -93,7 +94,8 @@ main(void)
         {'.', '.', '.', '4', '1', '9', '.', '.', '5'},
         {'.', '.', '.', '.', '8', '.', '.', '7', '9'}};
     std::printf(
-        "EXAMPLE 2: %s\n", is_valid_sudoku(example2) ? "true" : "false"); // false
+        "EXAMPLE 2: %s\n",
+        is_valid_sudoku(example2) ? "true" : "false"); // false
 
     std::vector<std::vector<char>> test_a = {
         {'.', '.', '.', '.', '5', '.', '.', '1', '.'},
@@ -105,5 +107,6 @@ main(void)
         {'.', '.', '.', '.', '.', '2', '.', '.', '.'},
         {'.', '2', '.', '9', '.', '.', '.', '.', '.'},
         {'.', '.', '4', '.', '.', '.', '.', '.', '.'}};
-    std::printf("TEST A: %s\n", is_valid_sudoku(test_a) ? "true" : "false"); // false
+    std::printf(
+        "TEST A: %s\n", is_valid_sudoku(test_a) ? "true" : "false"); // false
 }
