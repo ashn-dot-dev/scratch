@@ -16,6 +16,7 @@ CXXFLAGS=$(CXXFLAGS_REL)
 
 all: \
 	problem-0001-two-sum.out \
+	problem-0003-longest-substring-without-repeating-characters.out \
 	problem-0004-median-of-two-sorted-arrays.out \
 	problem-0036-valid-sudoku.out \
 	problem-0049-group-anagrams.out

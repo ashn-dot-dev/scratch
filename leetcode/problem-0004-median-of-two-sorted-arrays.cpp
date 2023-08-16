@@ -2,7 +2,9 @@
 #include <cstdio>
 #include <vector>
 
-double find_median_sorted_arrays(std::vector<int>& nums1, std::vector<int>& nums2) {
+double
+find_median_sorted_arrays(std::vector<int>& nums1, std::vector<int>& nums2)
+{
     std::vector<int> nums;
     nums.insert(nums.end(), nums1.begin(), nums1.end());
     nums.insert(nums.end(), nums2.begin(), nums2.end());
@@ -17,7 +19,8 @@ double find_median_sorted_arrays(std::vector<int>& nums1, std::vector<int>& nums
     return nums[nums.size() / 2];
 }
 
-int main(void)
+int
+main(void)
 {
     auto test = [](std::vector<int> nums1, std::vector<int> nums2) {
         std::printf("%f\n", find_median_sorted_arrays(nums1, nums2));
