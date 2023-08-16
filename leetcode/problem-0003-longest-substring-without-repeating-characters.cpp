@@ -2,7 +2,6 @@
 #include <array>
 #include <climits>
 #include <cstdio>
-#include <optional>
 #include <string>
 
 int
@@ -11,22 +10,24 @@ length_of_longest_substring(std::string s)
     int max = 0;
 
     // The value `mapping[x]` is the index of character x in s.
-    std::array<std::optional<size_t>, 1 << CHAR_BIT> mapping{std::nullopt};
+    // SIZE_MAX is used in place of std::optional::nullopt for faster runtime.
+    constexpr size_t NULLOPT = SIZE_MAX;
+    std::array<size_t, 1 << CHAR_BIT> mapping;
+    mapping.fill(NULLOPT);
+
     size_t lo = 0;
     size_t hi = 0;
     while (hi < s.size()) {
-        auto optional = mapping[s[hi]];
-        if (!optional.has_value()) {
+        size_t idx = mapping[s[hi]];
+        if (idx == NULLOPT) {
             mapping[s[hi]] = hi;
             hi += 1;
             continue;
         }
 
         max = std::max(max, (int)(hi - lo));
-
-        size_t idx = optional.value();
         for (size_t i = lo; i <= idx; ++i) {
-            mapping[s[i]] = std::nullopt;
+            mapping[s[i]] = NULLOPT;
         }
         lo = idx + 1;
     }
