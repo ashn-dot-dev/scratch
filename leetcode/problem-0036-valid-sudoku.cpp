@@ -17,8 +17,11 @@ bool
 is_valid_sudoku(std::vector<std::vector<char>>& board)
 {
     std::array<digit_set, 9> col_digits{};
+    col_digits.fill(0);
+
     for (size_t row = 0; row < board.size(); ++row) {
-        digit_set row_digits{};
+        digit_set row_digits = {0};
+
         for (size_t col = 0; col < board.size(); ++col) {
             auto ch = board[row][col];
             if (ch == '.') {
@@ -39,7 +42,8 @@ is_valid_sudoku(std::vector<std::vector<char>>& board)
 
     // Check sub-boxes.
     auto check_sub_box = [&board](size_t r, size_t c) {
-        digit_set digits{};
+        digit_set digits = {0};
+
         for (size_t row = r; row < r + 3; ++row) {
             for (size_t col = c; col < c + 3; ++col) {
                 auto ch = board[row][col];
@@ -76,7 +80,7 @@ main(void)
         {'.', '.', '.', '4', '1', '9', '.', '.', '5'},
         {'.', '.', '.', '.', '8', '.', '.', '7', '9'}};
     std::printf(
-        "EXAMPLE 1: %s\n", is_valid_sudoku(example1) ? "true" : "false");
+        "EXAMPLE 1: %s\n", is_valid_sudoku(example1) ? "true" : "false"); // true
 
     std::vector<std::vector<char>> example2 = {
         {'8', '3', '.', '.', '7', '.', '.', '.', '.'},
@@ -89,7 +93,7 @@ main(void)
         {'.', '.', '.', '4', '1', '9', '.', '.', '5'},
         {'.', '.', '.', '.', '8', '.', '.', '7', '9'}};
     std::printf(
-        "EXAMPLE 2: %s\n", is_valid_sudoku(example2) ? "true" : "false");
+        "EXAMPLE 2: %s\n", is_valid_sudoku(example2) ? "true" : "false"); // false
 
     std::vector<std::vector<char>> test_a = {
         {'.', '.', '.', '.', '5', '.', '.', '1', '.'},
@@ -101,5 +105,5 @@ main(void)
         {'.', '.', '.', '.', '.', '2', '.', '.', '.'},
         {'.', '2', '.', '9', '.', '.', '.', '.', '.'},
         {'.', '.', '4', '.', '.', '.', '.', '.', '.'}};
-    std::printf("TEST A: %s\n", is_valid_sudoku(test_a) ? "true" : "false");
+    std::printf("TEST A: %s\n", is_valid_sudoku(test_a) ? "true" : "false"); // false
 }
