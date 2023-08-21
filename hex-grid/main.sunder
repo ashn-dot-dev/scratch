@@ -2,24 +2,20 @@ import "c";
 import "raylib";
 import "std";
 
-let WINDOW_W: sint = 800;
-let WINDOW_H: sint = 600;
-
 let RADIUS = 48.0f32;
 
 # Hex position using the cube coordinate system satisfying q + r + s == 0.
-struct cube {
+struct hex {
     var q: sint;
     var r: sint;
     var s: sint;
 
-    func init(q: sint, r: sint, s: sint) cube {
+    func init(q: sint, r: sint, s: sint) hex {
         assert q + r + s == 0;
-        var self = (:cube){.q = q, .r = r, .s = s};
-        return self;
+        return (:hex){.q = q, .r = r, .s = s};
     }
 
-    func init_round(q_fractional: f32, r_fractional: f32, s_fractional: f32) cube {
+    func init_round(q_fractional: f32, r_fractional: f32, s_fractional: f32) hex {
         var q_rounded = f32::round(q_fractional);
         var r_rounded = f32::round(r_fractional);
         var s_rounded = f32::round(s_fractional);
@@ -41,15 +37,15 @@ struct cube {
             s = (:sint)-q_rounded - (:sint)r_rounded;
         }
 
-        return cube::init(q, r, s);
+        return hex::init(q, r, s);
     }
 
-    func hash(self: *cube) usize {
+    func hash(self: *hex) usize {
         var h = self.*.q.hash() +% self.*.q.hash() +% self.*.s.hash();
         return h *% h;
     }
 
-    func compare(lhs: *cube, rhs: *cube) ssize {
+    func compare(lhs: *hex, rhs: *hex) ssize {
         var cmp = sint::cmp(lhs.*.q, rhs.*.q);
         if cmp != 0 {
             return cmp;
@@ -69,29 +65,75 @@ struct cube {
     }
 }
 
-func point_to_hex(point: Vector2, radius: f32) cube {
+struct hex_functions {
+    var point_to_hex: typeof(point_to_pointy_hex);
+    var hex_to_point: typeof(pointy_hex_to_point);
+    var draw_hexagon: typeof(draw_pointy_hexagon);
+    var draw_hexagon_outline: typeof(draw_pointy_hexagon_outline);
+}
+
+let FLAT_HEX_FUNCTINONS = (:hex_functions){
+    .point_to_hex = point_to_flat_hex,
+    .hex_to_point = flat_hex_to_point,
+    .draw_hexagon = draw_flat_hexagon,
+    .draw_hexagon_outline = draw_flat_hexagon_outline,
+};
+let POINTY_HEX_FUNCTIONS = (:hex_functions){
+    .point_to_hex = point_to_pointy_hex,
+    .hex_to_point = pointy_hex_to_point,
+    .draw_hexagon = draw_pointy_hexagon,
+    .draw_hexagon_outline = draw_pointy_hexagon_outline,
+};
+
+func point_to_flat_hex(point: Vector2, radius: f32) hex {
     var q = (+2.0/3.0 * point.x) / radius;
     var r = (-1.0/3.0 * point.x  +  f32::sqrt(3.0)/3.0 * point.y) / radius;
     var s = -q - r;
 
-    return cube::init_round(q, r, s);
+    return hex::init_round(q, r, s);
 }
 
-func hex_to_point(hex: cube, radius: f32) Vector2 {
+func point_to_pointy_hex(point: Vector2, radius: f32) hex {
+    var q = (f32::sqrt(3.0)/3.0 * point.x - 1.0/3.0 * point.y) / radius;
+    var r = (2.0/3.0 * point.y) / radius;
+    var s = -q - r;
+
+    return hex::init_round(q, r, s);
+}
+
+func flat_hex_to_point(hex: hex, radius: f32) Vector2 {
     var x = radius * (3.0/2.0 * (:f32)hex.q);
     var y = radius * (f32::sqrt(3.0)/2.0 * (:f32)hex.q + f32::sqrt(3.0) * (:f32)hex.r);
     return (:Vector2){.x = x, .y = y};
 }
 
-func draw_hexagon(center: Vector2, radius: f32, color: Color) void {
+func pointy_hex_to_point(hex: hex, radius: f32) Vector2 {
+    var x = radius * (f32::sqrt(3.0) * (:f32)hex.q + f32::sqrt(3.0)/2.0 * (:f32)hex.r);
+    var y = radius * (3.0/2.0 * (:f32)hex.r);
+    return (:Vector2){.x = x, .y = y};
+}
+
+func draw_flat_hexagon(center: Vector2, radius: f32, color: Color) void {
     let SIDES: sint = 6;
     let ANGLE: f32 = 0.0; # flat-top orientation
     DrawPoly(center, SIDES, radius, ANGLE, color);
 }
 
-func draw_hexagon_outline(center: Vector2, radius: f32, color: Color) void {
+func draw_flat_hexagon_outline(center: Vector2, radius: f32, color: Color) void {
     let SIDES: sint = 6;
     let ANGLE: f32 = 0.0; # flat-top orientation
+    DrawPolyLinesEx(center, SIDES, radius, ANGLE, radius / 8.0, color);
+}
+
+func draw_pointy_hexagon(center: Vector2, radius: f32, color: Color) void {
+    let SIDES: sint = 6;
+    let ANGLE: f32 = 30.0; # pointy-top orientation
+    DrawPoly(center, SIDES, radius, ANGLE, color);
+}
+
+func draw_pointy_hexagon_outline(center: Vector2, radius: f32, color: Color) void {
+    let SIDES: sint = 6;
+    let ANGLE: f32 = 30.0; # pointy-top orientation
     DrawPolyLinesEx(center, SIDES, radius, ANGLE, radius / 8.0, color);
 }
 
@@ -122,52 +164,72 @@ func draw_text_format(font: Font, size: f32, color: Color, position: Vector2, fo
 func main() void {
     SetTraceLogLevel(LOG_WARNING);
     SetConfigFlags(FLAG_MSAA_4X_HINT);
-    InitWindow(WINDOW_W, WINDOW_H, startof("Hex Grid"));
+    InitWindow(800, 600, startof("NATAC"));
     defer CloseWindow();
     SetTargetFPS(60);
 
-    let VCR_OSD_MONO_TTF = embed("../assets/VCR_OSD_MONO_1.001.ttf");
-    let FONT_SIZE = 21.0f32;
-    let FONT_TTF_DEFAULT_NUMCHARS: sint = 95; # from rtext.c
+    let PUBLIC_PIXEL_TTF = embed("../assets/PublicPixel.ttf");
+    let FONT_SIZE = 16.0f32;
+    let FONT_NUMCHARS: sint = '~' - ' ' + 1; # Printable ASCII
     var font = LoadFontFromMemory(
         startof(".ttf"),
-        (:*u8)startof(VCR_OSD_MONO_TTF),
-        (:sint)countof(VCR_OSD_MONO_TTF),
+        (:*u8)startof(PUBLIC_PIXEL_TTF),
+        (:sint)countof(PUBLIC_PIXEL_TTF),
         (:sint)FONT_SIZE,
         std::ptr[[sint]]::NULL,
-        FONT_TTF_DEFAULT_NUMCHARS);
+        FONT_NUMCHARS);
     defer UnloadFont(font);
 
-    var tiles = std::hash_set[[cube]]::init();
+    # Canonical set of resource tiles, inserted by row from top to bottom and
+    # by column from left to right using pointy-top orientation.
+    var tiles = std::hash_set[[hex]]::init();
     defer tiles.fini();
-    # left
-    tiles.insert(cube::init(-2, +0, +2));
-    tiles.insert(cube::init(-2, +1, +1));
-    tiles.insert(cube::init(-2, +2, +0));
-    # left-middle
-    tiles.insert(cube::init(-1, -1, +2));
-    tiles.insert(cube::init(-1, +0, +1));
-    tiles.insert(cube::init(-1, +1, +0));
-    tiles.insert(cube::init(-1, +2, -1));
-    # middle
-    tiles.insert(cube::init(+0, +0, +0));
-    tiles.insert(cube::init(+0, -1, +1));
-    tiles.insert(cube::init(+0, +1, -1));
-    tiles.insert(cube::init(+0, -2, +2));
-    tiles.insert(cube::init(+0, +2, -2));
-    # middle-right
-    tiles.insert(cube::init(+1, -2, +1));
-    tiles.insert(cube::init(+1, -1, +0));
-    tiles.insert(cube::init(+1, +0, -1));
-    tiles.insert(cube::init(+1, +1, -2));
-    # right
-    tiles.insert(cube::init(+2, -2, +0));
-    tiles.insert(cube::init(+2, -1, -1));
-    tiles.insert(cube::init(+2, +0, -2));
+    # top row
+    tiles.insert(hex::init(+0, -2, +2));
+    tiles.insert(hex::init(+1, -2, +1));
+    tiles.insert(hex::init(+2, -2, +0));
+    # top-middle row
+    tiles.insert(hex::init(-1, -1, +2));
+    tiles.insert(hex::init(+0, -1, +1));
+    tiles.insert(hex::init(+1, -1, +0));
+    tiles.insert(hex::init(+2, -1, -1));
+    # middle row
+    tiles.insert(hex::init(-2, +0, +2));
+    tiles.insert(hex::init(-1, +0, +1));
+    tiles.insert(hex::init(+0, +0, +0));
+    tiles.insert(hex::init(+1, +0, -1));
+    tiles.insert(hex::init(+2, +0, -2));
+    # bottom-middle row
+    tiles.insert(hex::init(-2, +1, +1));
+    tiles.insert(hex::init(-1, +1, +0));
+    tiles.insert(hex::init(+0, +1, -1));
+    tiles.insert(hex::init(+1, +1, -2));
+    # bottom row
+    tiles.insert(hex::init(-2, +2, +0));
+    tiles.insert(hex::init(-1, +2, -1));
+    tiles.insert(hex::init(+0, +2, -2));
+
+    var hex_functions = POINTY_HEX_FUNCTIONS;
+    var camera_rotation = 0.0f32;
 
     for not WindowShouldClose() {
         if IsKeyPressed(KEY_F11) {
             ToggleFullscreen();
+        }
+        if IsKeyPressed(KEY_ONE) {
+            hex_functions = POINTY_HEX_FUNCTIONS;
+        }
+        if IsKeyPressed(KEY_TWO) {
+            hex_functions = FLAT_HEX_FUNCTINONS;
+        }
+        if IsKeyDown(KEY_Q) {
+            camera_rotation = camera_rotation - 1.0;
+        }
+        if IsKeyDown(KEY_E) {
+            camera_rotation = camera_rotation + 1.0;
+        }
+        if IsKeyDown(KEY_R) {
+            camera_rotation = 0.0f32;
         }
 
         BeginDrawing();
@@ -179,22 +241,40 @@ func main() void {
             .x = (:f32)render_w / 2.0,
             .y = (:f32)render_h / 2.0,
         };
+        var camera = (:Camera2D){
+            .target = (:Vector2){
+                .x = 0.0f32,
+                .y = 0.0f32
+            },
+            .offset = render_center,
+            .rotation = camera_rotation,
+            .zoom = 1.0f32,
+        };
 
-        var iter = std::hash_set_iterator[[cube]]::init(&tiles);
+        BeginMode2D(camera);
+
+        var iter = std::hash_set_iterator[[hex]]::init(&tiles);
         for iter.advance() {
-            var point = hex_to_point(*iter.current(), RADIUS);
-            var point = (:Vector2){
-                .x = point.x + render_center.x,
-                .y = point.y + render_center.y
-            };
+            var point = hex_functions.hex_to_point(*iter.current(), RADIUS);
             var color = (:Color){
                 .r = (:u8)iter.current().*.q *% 0x33 +% 0x66,
                 .g = (:u8)iter.current().*.r *% 0x33 +% 0x66,
                 .b = (:u8)iter.current().*.s *% 0x33 +% 0x66,
                 .a = 0xFF,
             };
-            draw_hexagon(point, RADIUS, color);
+            hex_functions.draw_hexagon(point, RADIUS, color);
         }
+
+        var mouse = GetMousePosition();
+        var world = GetScreenToWorld2D(mouse, camera);
+        var world_hex = hex_functions.point_to_hex(world, RADIUS);
+        var world_hex_center = hex_functions.hex_to_point(world_hex, RADIUS);
+        draw_circle(world_hex_center, 4.0, ORANGE);
+        if tiles.contains(world_hex) {
+            hex_functions.draw_hexagon_outline(world_hex_center, RADIUS, ORANGE);
+        }
+
+        EndMode2D();
 
         var fps = GetFPS();
         draw_text_format(font, FONT_SIZE, BLACK,
@@ -202,19 +282,6 @@ func main() void {
             "FPS {}",
             (:[]std::formatter)[
                 std::formatter::init[[typeof(fps)]](&fps)]);
-
-        var mouse = GetMousePosition();
-        var world = (:Vector2){
-            .x = mouse.x - render_center.x,
-            .y = mouse.y - render_center.y,
-        };
-        var mouse_hex = point_to_hex(world, RADIUS);
-        var mouse_hex_center = hex_to_point(mouse_hex, RADIUS);
-        var mouse_hex_center = (:Vector2){
-            .x = mouse_hex_center.x + render_center.x,
-            .y = mouse_hex_center.y + render_center.y
-        };
-
         draw_text_format(font, FONT_SIZE, BLACK,
             (:Vector2){.x = 2.0, .y = 1.0 * FONT_SIZE},
             "MOUSE: x={.0}, y={.0}",
@@ -223,22 +290,23 @@ func main() void {
                 std::formatter::init[[f32]](&mouse.y)]);
         draw_text_format(font, FONT_SIZE, BLACK,
             (:Vector2){.x = 2.0, .y = 2.0 * FONT_SIZE},
-            "MOUSE->HEX: q={}, r={}, s={}",
+            "WORLD: x={.0}, y={.0}",
             (:[]std::formatter)[
-                std::formatter::init[[sint]](&mouse_hex.q),
-                std::formatter::init[[sint]](&mouse_hex.r),
-                std::formatter::init[[sint]](&mouse_hex.s)]);
+                std::formatter::init[[f32]](&world.x),
+                std::formatter::init[[f32]](&world.y)]);
         draw_text_format(font, FONT_SIZE, BLACK,
             (:Vector2){.x = 2.0, .y = 3.0 * FONT_SIZE},
-            "MOUSE->HEX->POINT: x={.0}, y={.0}",
+            "WORLD->HEX: q={}, r={}, s={}",
             (:[]std::formatter)[
-                std::formatter::init[[f32]](&mouse_hex_center.x),
-                std::formatter::init[[f32]](&mouse_hex_center.y)]);
-
-        draw_circle(mouse_hex_center, 4.0, ORANGE);
-        if tiles.contains(mouse_hex) {
-            draw_hexagon_outline(mouse_hex_center, RADIUS, ORANGE);
-        }
+                std::formatter::init[[sint]](&world_hex.q),
+                std::formatter::init[[sint]](&world_hex.r),
+                std::formatter::init[[sint]](&world_hex.s)]);
+        draw_text_format(font, FONT_SIZE, BLACK,
+            (:Vector2){.x = 2.0, .y = 4.0 * FONT_SIZE},
+            "WORLD->HEX->WORLD: x={.0}, y={.0}",
+            (:[]std::formatter)[
+                std::formatter::init[[f32]](&world_hex_center.x),
+                std::formatter::init[[f32]](&world_hex_center.y)]);
 
         EndDrawing();
     }
