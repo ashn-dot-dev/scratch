@@ -46,12 +46,12 @@ effects shown:
     {a-b}/{a+b}  { a b -- result }
 )
 
-( a*a + a*b + c)
+( a*a + a*b + c )
 : EXPR1 ( c a b -- result )
-    2DUP * ( a*b )
-    ROT ROT DROP
-    DUP *  ( a*a )
-    + + ;  ( a*a + a*b + c)
+    ( a*a + a*b + c => a * {a + b} + c )
+    OVER + ( a + b )
+    *      ( a * {a + b} )
+    + ;    ( a * {a + b} + c )
 
 ( 5**2 + 5*7 + 3 => 25 + 35 + 3 => 63 )
 3 5 7 .S EXPR1 . CR
