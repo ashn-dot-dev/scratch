@@ -88,7 +88,7 @@ struct big_decimal {
         var decimal_part = result.value();
         defer decimal_part.fini();
 
-        var unscaled = std::big_integer::init_from_big_integer_with_allocator(allocator, &integer_part);
+        var unscaled = std::big_integer::init_assign_with_allocator(allocator, &integer_part);
         var scale = countof(str[decimal.value()+1:countof(str)]);
         for _ in scale {
             std::big_integer::mul(&unscaled, &unscaled, &std::big_integer::POSITIVE_TEN);
@@ -129,7 +129,7 @@ struct big_decimal {
         }
 
         # self.*._scale > scale
-        var tmp = std::big_integer::init_from_big_integer(&std::big_integer::POSITIVE_ONE);
+        var tmp = std::big_integer::init_assign(&std::big_integer::POSITIVE_ONE);
         defer tmp.fini();
 
         for self.*._scale > scale {
@@ -187,7 +187,7 @@ struct big_decimal {
         var output = std::vector[[byte]]::init();
         defer output.fini();
 
-        var tmp = std::big_integer::init_from_big_integer(&self.*._unscaled);
+        var tmp = std::big_integer::init_assign(&self.*._unscaled);
         defer tmp.fini();
         std::big_integer::abs(&tmp, &tmp);
 
