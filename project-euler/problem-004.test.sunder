@@ -13,7 +13,7 @@ func main() void {
         for j in 100:1000 {
             var product = i * j;
 
-            var allocator = std::linear_allocator::init(buf[0:countof(buf)]);
+            var allocator = std::linear_allocator::init[[byte]](buf[0:countof(buf)]);
             var string = std::string::init_with_allocator(std::allocator::init[[typeof(allocator)]](&allocator));
             defer string.fini();
             std::print_format(std::writer::init[[std::string]](&string), "{}", (:[]std::formatter)[std::formatter::init[[usize]](&product)]);
