@@ -5,7 +5,7 @@ for a particular solution.
 ## Notes and Observations
 I tried LeetCode for the first time on the evening of 2023-08-15. My opinion of
 LeetCode had been somewhat negative, as I had mostly associated the site with
-the competitive programming grinds that young software developers would subject
+the competitive programming grinds that young software developers subject
 themselves to in order to prepare for FAANG interviews. I am not a fan of the
 adversarial relationship that this interview style creates, and the way that
 these types of interviews disadvantage candidates who do not have the free time
@@ -21,7 +21,7 @@ had never completed before, and I chose to solve them all in C++20. Of the
 problems I solved, the easiest for me was "Palindrome Number" and the most
 difficult was "Longest Substring Without Repeating Characters". While solving
 the longest substring problem, I *did* figure out how to use the sliding window
-technique, but implement it efficiently without using `std::map` took me an
+technique, but implementing it efficiently without using `std::map` took me an
 additional hour after my initial solve. It was like 11:00 PM at the time, so my
 tiredness was likely a contributing factor, but an optimized solution still
 took longer than anticipated.
