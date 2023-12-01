@@ -1,0 +1,104 @@
+import "std";
+
+func part1(lines: [][]byte) void {
+    var answer = 0s;
+    var iter = std::slice_iterator[[[]byte]]::init(lines);
+    for iter.advance() {
+        var line = *iter.current();
+
+        var digit_a = std::optional[[byte]]::EMPTY;
+        for i in countof(line) {
+            if std::ascii::is_digit(line[i]) {
+                digit_a = std::optional[[byte]]::init_value(line[i]);
+                break;
+            }
+        }
+
+        var digit_b = std::optional[[byte]]::EMPTY;
+        for i in countof(line) {
+            if std::ascii::is_digit(line[countof(line) - 1 - i]) {
+                digit_b = std::optional[[byte]]::init_value(line[countof(line) - 1 - i]);
+                break;
+            }
+        }
+
+        var str = (:[]byte)[digit_a.value(), digit_b.value()];
+        var int = ssize::init_from_str(str, 10);
+        answer = answer + int.value();
+    }
+
+    std::print_format_line(std::out(), "PART 1: {}", (:[]std::formatter)[std::formatter::init[[typeof(answer)]](&answer)]);
+}
+
+func part2(lines: [][]byte) void {
+    alias mapping = struct { var str: []byte; var num: byte; };
+    let MAPPINGS = (:[]mapping)[
+        (:mapping){.str = "one",   .num = '1'},
+        (:mapping){.str = "two",   .num = '2'},
+        (:mapping){.str = "three", .num = '3'},
+        (:mapping){.str = "four",  .num = '4'},
+        (:mapping){.str = "five",  .num = '5'},
+        (:mapping){.str = "six",   .num = '6'},
+        (:mapping){.str = "seven", .num = '7'},
+        (:mapping){.str = "eight", .num = '8'},
+        (:mapping){.str = "nine",  .num = '9'},
+    ];
+
+    var answer = 0s;
+    var iter = std::slice_iterator[[[]byte]]::init(lines);
+    for iter.advance() {
+        var line = *iter.current();
+
+        var digit_a = std::optional[[byte]]::EMPTY;
+        for i in countof(line) {
+            if std::ascii::is_digit(line[i]) {
+                digit_a = std::optional[[byte]]::init_value(line[i]);
+                break;
+            }
+            for m in countof(MAPPINGS) {
+                if std::str::starts_with(line[i:countof(line)], MAPPINGS[m].str) {
+                    digit_a = std::optional[[byte]]::init_value(MAPPINGS[m].num);
+                    break;
+                }
+            }
+            if digit_a.is_value() {
+                break;
+            }
+        }
+
+        var digit_b = std::optional[[byte]]::EMPTY;
+        for i in countof(line) {
+            if std::ascii::is_digit(line[countof(line) - 1 - i]) {
+                digit_b = std::optional[[byte]]::init_value(line[countof(line) - 1 - i]);
+                break;
+            }
+            for m in countof(MAPPINGS) {
+                if std::str::starts_with(line[countof(line) - 1 - i : countof(line)], MAPPINGS[m].str) {
+                    digit_b = std::optional[[byte]]::init_value(MAPPINGS[m].num);
+                    break;
+                }
+            }
+            if digit_b.is_value() {
+                break;
+            }
+        }
+
+        var str = (:[]byte)[digit_a.value(), digit_b.value()];
+        var int = ssize::init_from_str(str, 10);
+        answer = answer + int.value();
+    }
+
+    std::print_format_line(std::out(), "PART 2: {}", (:[]std::formatter)[std::formatter::init[[typeof(answer)]](&answer)]);
+}
+
+func main() void {
+    var input = std::ascii::view_trimmed(embed("day-01.input"));
+    var lines = std::str::split(input, "\n");
+    defer std::slice[[[]byte]]::delete(lines);
+
+    part1(lines);
+    part2(lines);
+}
+################################################################################
+# PART 1: 56042
+# PART 2: 55358
