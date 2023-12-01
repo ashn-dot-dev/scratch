@@ -1,13 +1,7 @@
 import "std";
 
 func main() void {
-    var result = std::file::open("day-xx.input", std::file::OPEN_READ);
-    var file = result.value();
-    defer file.close();
-
-    var result = std::read_all(std::reader::init[[typeof(file)]](&file));
-    var input = result.value();
-    defer std::slice[[byte]]::delete(input);
+    var input = embed("day-xx.input");
 
     for i in countof(input) {
         var char = input[i];

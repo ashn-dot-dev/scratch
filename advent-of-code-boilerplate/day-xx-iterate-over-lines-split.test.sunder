@@ -1,14 +1,7 @@
 import "std";
 
 func main() void {
-    var result = std::file::open("day-xx.input", std::file::OPEN_READ);
-    var file = result.value();
-    defer file.close();
-
-    var reader = std::reader::init[[typeof(file)]](&file);
-    var result = std::read_all(reader);
-    var input = std::ascii::view_trimmed(result.value());
-
+    var input = std::ascii::view_trimmed(embed("day-xx.input"));
     var lines = std::str::split(input, "\n");
     defer std::slice[[[]byte]]::delete(lines);
 
