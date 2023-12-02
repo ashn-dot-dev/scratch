@@ -1,16 +1,5 @@
 import "std";
 
-struct game {
-    var id: usize;
-    var sets: []set;
-}
-
-struct set {
-    var r: std::optional[[usize]];
-    var g: std::optional[[usize]];
-    var b: std::optional[[usize]];
-}
-
 func main() void {
     var input = std::ascii::view_trimmed(embed("day-02.input"));
     var lines = std::str::split(input, "\n");
@@ -30,36 +19,6 @@ func main() void {
         var id = usize::init_from_str(cut.value().suffix, 10);
         var id = id.value();
 
-        var split = std::str::split(sets, "; ");
-        var game = (: ::game){
-            .id = id,
-            .sets = std::slice[[set]]::new(countof(split)),
-        };
-        for i in countof(split) {
-            var split = std::str::split(split[i], ", ");
-            var set = (:set){
-                .r = std::optional[[usize]]::EMPTY,
-                .b = std::optional[[usize]]::EMPTY,
-                .g = std::optional[[usize]]::EMPTY,
-            };
-            for ii in countof(split) {
-                var cut = std::str::cut(split[ii], " ");
-                var num = usize::init_from_str(cut.value().prefix, 10);
-                var num = num.value();
-                var color = cut.value().suffix;
-                if std::str::eq(color, "red") {
-                    set.r = std::optional[[usize]]::init_value(num);
-                }
-                if std::str::eq(color, "blue") {
-                    set.b = std::optional[[usize]]::init_value(num);
-                }
-                if std::str::eq(color, "green") {
-                    set.g = std::optional[[usize]]::init_value(num);
-                }
-                game.sets[i] = set;
-            }
-        }
-
         let R = 12u;
         let G = 13u;
         let B = 14u;
@@ -67,32 +26,46 @@ func main() void {
         var max_g = 0u;
         var max_b = 0u;
         var possible = true;
-        for i in countof(game.sets) {
-            if game.sets[i].r.is_value() and game.sets[i].r.value() > R {
-                possible = false;
-            }
-            if game.sets[i].g.is_value() and game.sets[i].g.value() > G {
-                possible = false;
-            }
-            if game.sets[i].b.is_value() and game.sets[i].b.value() > B {
-                possible = false;
-            }
+        var split = std::str::split(sets, "; ");
+        defer std::slice[[[]byte]]::delete(split);
+        for i in countof(split) {
+            var r = 0u;
+            var g = 0u;
+            var b = 0u;
 
-            if game.sets[i].r.is_value() {
-                max_r = usize::max(max_r, game.sets[i].r.value());
-            }
-            if game.sets[i].g.is_value() {
-                max_g = usize::max(max_g, game.sets[i].g.value());
-            }
-            if game.sets[i].b.is_value() {
-                max_b = usize::max(max_b, game.sets[i].b.value());
+            var split = std::str::split(split[i], ", ");
+            defer std::slice[[[]byte]]::delete(split);
+            for ii in countof(split) {
+                var cut = std::str::cut(split[ii], " ");
+                var num = usize::init_from_str(cut.value().prefix, 10);
+                var num = num.value();
+                var color = cut.value().suffix;
+                if std::str::eq(color, "red") {
+                    assert r == 0;
+                    r = num;
+                }
+                if std::str::eq(color, "green") {
+                    assert g == 0;
+                    g = num;
+                }
+                if std::str::eq(color, "blue") {
+                    assert b == 0;
+                    b = num;
+                }
+
+                if r > R or g > G or b > B {
+                    possible = false;
+                }
+                max_r = usize::max(max_r, r);
+                max_g = usize::max(max_g, g);
+                max_b = usize::max(max_b, b);
             }
         }
 
-        var power = max_r * max_g * max_b;
         if possible {
-            part1_answer = part1_answer + game.id;
+            part1_answer = part1_answer + id;
         }
+        var power = max_r * max_g * max_b;
         part2_answer = part2_answer + power;
     }
 
