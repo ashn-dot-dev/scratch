@@ -229,7 +229,7 @@ func main() void {
 
 let x = 0u;
 let y = 1u;
-alias position = [2]ssize; # [x, y]
+type position = [2]ssize; # [x, y]
 
 extend position func compare(lhs: *position, rhs: *position) ssize {
     var cmp = ssize::compare(&lhs.*[x], &rhs.*[x]);

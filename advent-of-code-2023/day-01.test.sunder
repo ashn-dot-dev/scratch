@@ -31,7 +31,7 @@ func part1(lines: [][]byte) void {
 }
 
 func part2(lines: [][]byte) void {
-    alias mapping = struct { var str: []byte; var num: byte; };
+    type mapping = struct { var str: []byte; var num: byte; };
     let MAPPINGS = (:[]mapping)[
         (:mapping){.str = "one",   .num = '1'},
         (:mapping){.str = "two",   .num = '2'},

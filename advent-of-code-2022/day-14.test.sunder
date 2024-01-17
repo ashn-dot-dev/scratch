@@ -22,7 +22,7 @@ struct coordinate {
     }
 }
 
-alias tile = byte;
+type tile = byte;
 let ROCK: tile = '#';
 let SAND: tile = 'o';
 
