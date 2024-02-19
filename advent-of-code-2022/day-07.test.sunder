@@ -98,7 +98,7 @@ func main() void {
             }
 
             var optional = dir.*.entries.lookup(name);
-            dir = (:*directory)optional.value().object;
+            dir = (:*directory)optional.value().*.object;
             continue;
         }
 

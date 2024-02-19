@@ -36,7 +36,7 @@ func nice2(str: []byte) bool {
             # ^ ^
             # | +- first index + 2 (no overlap between first and second "aa")
             # +- first index
-            if i >= optional.value() + 2 {
+            if i >= *optional.value() + 2 {
                 double_pair = true;
             }
         }
@@ -67,10 +67,10 @@ func main() void {
         defer std::slice[[byte]]::delete(line);
 
         if nice1(line) {
-            nice1_count = nice1_count + 1;
+            nice1_count += 1;
         }
         if nice2(line) {
-            nice2_count = nice2_count + 1;
+            nice2_count += 1;
         }
     }
 
