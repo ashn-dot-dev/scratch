@@ -1,0 +1,27 @@
+import "std";
+
+func fizzbuzz(count: usize) void {
+    for n in 1:count+1 {
+        if n % 3 == 0 and n % 5 == 0 {
+            std::print_line(std::out(), "fizzbuzz");
+            continue;
+        }
+        if n % 3 == 0 {
+            std::print_line(std::out(), "fizz");
+            continue;
+        }
+        if n % 5 == 0 {
+            std::print_line(std::out(), "buzz");
+            continue;
+        }
+        std::print_format_line(
+            std::out(),
+            "{}",
+            (:[]std::formatter)[
+                std::formatter::init[[typeof(n)]](&n)]);
+    }
+}
+
+func main() void {
+    fizzbuzz(20);
+}
