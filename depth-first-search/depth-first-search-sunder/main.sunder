@@ -1,0 +1,216 @@
+import "std";
+
+struct node {
+    var name: std::string;
+    var children: std::hash_set[[*node]];
+
+    func init(name: []byte) node {
+        return (:node){
+            .name = std::string::init_from_str(name),
+            .children = std::hash_set[[*node]]::init(),
+        };
+    }
+
+    func fini(self: *node) void {
+        self.*.name.fini();
+        self.*.children.fini();
+    }
+}
+
+struct graph {
+    var nodes: std::hash_set[[*node]];
+
+    func init() graph {
+        return (:graph){
+            .nodes = std::hash_set[[*node]]::init(),
+        };
+    }
+
+    func fini(self: *graph) void {
+        self.*.nodes.fini();
+    }
+}
+
+func dfs_visit(graph: *graph, node: *node, visited: *std::hash_set[[*node]], ordered: *std::vector[[*node]]) void {
+    if visited.*.contains(node) {
+        return;
+    }
+
+    visited.*.insert(node);
+    var iter = node.*.children.iterator();
+    for iter.advance() {
+        dfs_visit(graph, *iter.current(), visited, ordered);
+    }
+    ordered.*.push(node);
+}
+
+func dfs(graph: *graph) std::vector[[*node]] {
+    var visited = std::hash_set[[*node]]::init();
+    defer visited.fini();
+    var ordered = std::vector[[*node]]::init();
+
+    var iter = graph.*.nodes.iterator();
+    for iter.advance() {
+        dfs_visit(graph, *iter.current(), &visited, &ordered);
+    }
+
+    std::slice[[*node]]::reverse(ordered.data());
+    return ordered;
+}
+
+func dfs_cycle_detecting_visit(graph: *graph, node: *node, visiting: *std::hash_set[[*node]], visited: *std::hash_set[[*node]], ordered: *std::vector[[*node]]) std::result[[void, std::error]] {
+    if visited.*.contains(node) {
+        return std::result[[void, std::error]]::init_value(void::VALUE);
+    }
+    if visiting.*.contains(node) {
+        return std::result[[void, std::error]]::init_error((:std::error)&"cycle detected");
+    }
+
+    visiting.*.insert(node);
+    var iter = node.*.children.iterator();
+    for iter.advance() {
+        var result = dfs_cycle_detecting_visit(graph, *iter.current(), visiting, visited, ordered);
+        if result.is_error() {
+            return result;
+        }
+    }
+    visited.*.insert(node);
+    ordered.*.push(node);
+    return std::result[[void, std::error]]::init_value(void::VALUE);
+}
+
+func dfs_cycle_detecting(graph: *graph) std::result[[std::vector[[*node]], std::error]] {
+    var visiting = std::hash_set[[*node]]::init();
+    defer visiting.fini();
+    var visited = std::hash_set[[*node]]::init();
+    defer visited.fini();
+    var ordered = std::vector[[*node]]::init();
+
+    var iter = graph.*.nodes.iterator();
+    for iter.advance() {
+        var result = dfs_cycle_detecting_visit(graph, *iter.current(), &visiting, &visited, &ordered);
+        if result.is_error() {
+            ordered.fini();
+            return std::result[[std::vector[[*node]], std::error]]::init_error(result.error());
+        }
+    }
+
+    std::slice[[*node]]::reverse(ordered.data());
+    return std::result[[std::vector[[*node]], std::error]]::init_value(ordered);
+}
+
+func main() void {
+    # B-->E-->A--+
+    # |   |   |  |
+    # |   v   |  |
+    # +-->C<--+  |
+    #      |     v
+    #      +---->D
+
+    var a = node::init("A");
+    var b = node::init("B");
+    var c = node::init("C");
+    var d = node::init("D");
+    var e = node::init("E");
+    defer {
+        a.fini();
+        b.fini();
+        c.fini();
+        d.fini();
+        e.fini();
+    }
+
+    a.children.insert(&c);
+    a.children.insert(&d);
+
+    b.children.insert(&c);
+    b.children.insert(&e);
+
+    c.children.insert(&d);
+
+    e.children.insert(&a);
+    e.children.insert(&c);
+
+    var graph = graph::init();
+    defer graph.fini();
+
+    graph.nodes.insert(&a);
+    graph.nodes.insert(&b);
+    graph.nodes.insert(&c);
+    graph.nodes.insert(&d);
+    graph.nodes.insert(&e);
+
+    var ordered = dfs(&graph);
+    defer ordered.fini();
+    var iter = ordered.iterator();
+    std::print_line(std::out(), "Topological Ordering:");
+    for iter.advance() {
+        std::print_format_line(
+            std::out(),
+            "{}",
+            (:[]std::formatter)[
+                std::formatter::init[[std::string]](&iter.current().*.*.name)]);
+    }
+
+    # +->W-->X--+
+    # |  |   |  |
+    # |  |   v  v
+    # |  +-->Y->Z
+    # |         |
+    # +---------+
+
+    var w = node::init("W");
+    var x = node::init("X");
+    var y = node::init("Y");
+    var z = node::init("Z");
+    defer {
+        w.fini();
+        x.fini();
+        y.fini();
+        z.fini();
+    }
+
+    w.children.insert(&x);
+    w.children.insert(&y);
+
+    x.children.insert(&y);
+    x.children.insert(&z);
+
+    y.children.insert(&z);
+
+    z.children.insert(&w);
+
+    var graph = ::graph::init();
+    graph.fini();
+
+    graph.nodes.insert(&w);
+    graph.nodes.insert(&x);
+    graph.nodes.insert(&y);
+    graph.nodes.insert(&z);
+
+    var result = dfs_cycle_detecting(&graph);
+    if result.is_value() {
+        var ordered = result.value();
+        defer ordered.fini();
+        var iter = ordered.iterator();
+        std::print_line(std::out(), "Topological Ordering:");
+        for iter.advance() {
+            std::print_format_line(
+                std::out(),
+                "{}",
+                (:[]std::formatter)[
+                    std::formatter::init[[std::string]](&iter.current().*.*.name)]);
+        }
+    }
+    else {
+        std::print_line(std::err(), result.error().*.data);
+    }
+}
+
+extend *node func eq(lhs: **node, rhs: **node) bool {
+    return std::eq[[std::string]](&lhs.*.*.name, &rhs.*.*.name);
+}
+
+extend *node func hash(self: **node) usize {
+    return self.*.*.name.hash();
+}
