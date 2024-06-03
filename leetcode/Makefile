@@ -6,12 +6,12 @@
 	clean
 
 CXXFLAGS_BASE=-std=c++20 -Wall -Wextra -Wpedantic
-CXXFLAGS_DBG=$(CXXXFLAGS_BASE) -O0 -g
-CXXFLAGS_REL=$(CXXXFLAGS_BASE) -Os
+CXXFLAGS_DBG=$(CXXFLAGS_BASE) -O0 -g
+CXXFLAGS_REL=$(CXXFLAGS_BASE) -Os
 
 SANITIZE=-fsanitize=address,leak,undefined
 
-CXX=g++
+CXX=clang++
 CXXFLAGS=$(CXXFLAGS_REL)
 
 all: \
