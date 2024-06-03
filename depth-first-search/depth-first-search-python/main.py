@@ -22,7 +22,7 @@ class Graph:
 
 def dfs(graph: Graph) -> list[Node]:
     visited = set()
-    sorted = list()
+    ordered = list()
 
     def visit(node: Node):
         if node in visited:
@@ -30,17 +30,17 @@ def dfs(graph: Graph) -> list[Node]:
         visited.add(node)
         for child in node.children:
             visit(child)
-        sorted.insert(0, node)
+        ordered.insert(0, node)
 
     for node in graph.nodes:
         visit(node)
-    return sorted
+    return ordered
 
 
 def dfs_cycle_detecting(graph: Graph) -> list[Node]:
     visiting = set()
     visited = set()
-    sorted = list()
+    ordered = list()
 
     def visit(node: Node):
         if node in visited:
@@ -51,11 +51,11 @@ def dfs_cycle_detecting(graph: Graph) -> list[Node]:
         for child in node.children:
             visit(child)
         visited.add(node)
-        sorted.insert(0, node)
+        ordered.insert(0, node)
 
     for node in graph.nodes:
         visit(node)
-    return sorted
+    return ordered
 
 
 def main():
@@ -83,8 +83,8 @@ def main():
     e.children.add(a)
     e.children.add(c)
 
-    sorted = dfs(Graph((a, b, c, d, e)))
-    print([node.name for node in sorted])
+    ordered = dfs(Graph((a, b, c, d, e)))
+    print([node.name for node in ordered])
 
     # +->W-->X--+
     # |  |   |  |
@@ -108,13 +108,13 @@ def main():
 
     z.children.add(w)
 
-    sorted = dfs_cycle_detecting(Graph((a, b, c, d, e)))
-    print([node.name for node in sorted])
+    ordered = dfs_cycle_detecting(Graph((a, b, c, d, e)))
+    print([node.name for node in ordered])
     try:
-        sorted = dfs_cycle_detecting(Graph((w, x, y, z)))
+        ordered = dfs_cycle_detecting(Graph((w, x, y, z)))
     except Exception as e:
         print("error:", e, file=sys.stderr)
-    print([node.name for node in sorted])
+    print([node.name for node in ordered])
 
 
 if __name__ == "__main__":
