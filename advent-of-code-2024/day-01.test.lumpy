@@ -1,0 +1,41 @@
+let lines = fs::read("day-01.input").trim().split("\n");
+#let lines = ```
+#3   4
+#4   3
+#2   5
+#1   3
+#3   9
+#3   3
+#```.trim().split("\n");
+
+let lhs = [];
+let rhs = [];
+for line in lines {
+    let split = line.cut("   ");
+    lhs.push(number(split.prefix));
+    rhs.push(number(split.suffix));
+}
+let lhs = lhs.sorted();
+let rhs = rhs.sorted();
+
+let part1 = 0;
+for i in lines.count() {
+    let distance = math::abs(lhs[i] - rhs[i]);
+    part1 = part1 + distance;
+}
+println("PART 1: " + repr(part1));
+
+let part2 = 0;
+for l in lhs {
+    let count = 0;
+    for r in rhs {
+        if l == r {
+            count = count + 1;
+        }
+    }
+    part2 = part2 + l * count;
+}
+println("PART 2: " + repr(part2));
+################################################################################
+# PART 1: 3714264
+# PART 2: 18805872

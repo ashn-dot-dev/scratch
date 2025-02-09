@@ -1,4 +1,10 @@
 let lines = fs::read("day-xx.input").trim().split("\n");
+#let lines = ```
+#TEST INPUT LINE 1
+#TEST INPUT LINE 2
+#TEST INPUT LINE 3
+#```.trim().split("\n");
+
 for line in lines {
     # CODE FOR EACH LINE GOES HERE
     println("LINE: " + repr(line));
