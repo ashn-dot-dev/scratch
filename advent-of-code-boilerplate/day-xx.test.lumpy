@@ -1,0 +1,17 @@
+let lines = fs::read("day-xx.input").trim().split("\n");
+for line in lines {
+    # CODE FOR EACH LINE GOES HERE
+    println("LINE: " + repr(line));
+}
+
+let part1 = 123;
+println("PART 1: " + string(part1));
+
+let part2 = 456;
+println("PART 2: " + string(part2));
+################################################################################
+# LINE: "LINE 1"
+# LINE: "LINE 2"
+# LINE: "LINE 3"
+# PART 1: 123
+# PART 2: 456
