@@ -1,0 +1,115 @@
+let input = fs::read("day-04.input").trim().split("\n");
+#let input = ```
+#..X...
+#.SAMX.
+#.A..A.
+#XMAS.S
+#.X....
+#```.trim().split("\n");
+#let input = ```
+#.M.S......
+#..A..MSMS.
+#.M.S.MAA..
+#..A.ASMSM.
+#.M.S.M....
+#..........
+#S.S.S.S.S.
+#.A.A.A.A..
+#M.M.M.M.M.
+#..........
+#```.trim().split("\n");
+#let input = ```
+#MMMSXXMASM
+#MSAMXMSMSA
+#AMXSXMAAMM
+#MSAMASMSMX
+#XMASAMXAMM
+#XXAMMXXAMA
+#SMSMSASXSS
+#SAXAMASAAA
+#MAMMMXMMMM
+#MXMXAXMASX
+#```.trim().split("\n");
+
+let w = input[0].count();
+let h = input.count();
+let get = function(x, y) {
+    if x < 0 or x >= w {
+        return null;
+    }
+    if y < 0 or y >= h {
+        return null;
+    }
+    return input[y].slice(x, x+1);
+};
+
+let chars = ["X", "M", "A", "S"];
+let paths = [
+    [+0, -1], # ^
+    [+0, +1], # v
+    [-1, +0], # <
+    [+1, +0], # >
+
+    [-1, -1], # <^
+    [+1, -1], # >^
+    [-1, +1], # <v
+    [+1, +1], # >v
+];
+let check = function(x, y) {
+    let count = 0;
+    for path in paths {
+        let x = x;
+        let y = y;
+        for i in chars.count() {
+            let char = chars[i];
+            if char != get(x, y) {
+                break;
+            }
+            if char == "S" {
+                count = count + 1;
+            }
+            x = x + path[0];
+            y = y + path[1];
+        }
+    }
+    return count;
+};
+
+let part1 = 0;
+for y in input.count() {
+    for x in input[y].count() {
+        part1 = part1 + check(x, y);
+    }
+}
+println("PART 1: " + repr(part1));
+
+let crosses = [
+    [[-1, -1], [+1, +1]], # <^, >v
+    [[+1, -1], [-1, +1]], # >^, <v
+];
+let check = function(x, y) {
+    if get(x, y) != "A" {
+        return 0;
+    }
+
+    let mas = 0;
+    for cross in crosses {
+        let char_a = get(x + cross[0][0], y + cross[0][1]);
+        let char_b = get(x + cross[1][0], y + cross[1][1]);
+
+        if char_a == "M" and char_b == "S" or char_a == "S" and char_b == "M" {
+            mas = mas + 1;
+        }
+    }
+
+    return number(mas == 2);
+};
+
+let part2 = 0;
+for y in input.count() {
+    for x in input[y].count() {
+        part2 = part2 + check(x, y);
+    }
+}
+println("PART 2: " + repr(part2));
+################################################################################
