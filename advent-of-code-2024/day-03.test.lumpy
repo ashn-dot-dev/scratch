@@ -1,0 +1,34 @@
+let input = fs::read("day-03.input");
+#let input = `xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))`;
+#let input = `xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))`;
+
+let re = import("re");
+
+let instructions = re::findall(`mul\(\s*(\d\d?\d?)\s*,\s*(\d\d?\d?)\s*\)`, input);
+let part1 = 0;
+for x in instructions {
+    assert(x.count() == 2);
+    part1 = part1 + number(x[0]) * number(x[1]);
+}
+println("PART 1: " + repr(part1));
+
+let instructions = re::findall(`(do\(\)|don't\(\)|mul\(\s*(\d\d?\d?)\s*,\s*(\d\d?\d?)\s*\))`, input);
+let part2 = 0;
+let enable = true;
+for x in instructions {
+    if x[0] == "do()" {
+        enable = true;
+        continue;
+    }
+
+    if x[0] == "don't()" {
+        enable = false;
+        continue;
+    }
+
+    part2 = part2 + number(enable) * number(x[1]) * number(x[2]);
+}
+println("PART 2: " + repr(part2));
+################################################################################
+# PART 1: 174561379
+# PART 2: 106921067
