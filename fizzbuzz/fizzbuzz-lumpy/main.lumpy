@@ -1,0 +1,19 @@
+let fizzbuzz = function(n) {
+    for i in n + 1 {
+        if i % 3 == 0 and i % 5 == 0 {
+            println("fizzbuzz");
+            continue;
+        }
+        if i % 3 == 0 {
+            println("fizz");
+            continue;
+        }
+        if i % 5 == 0 {
+            println("buzz");
+            continue;
+        }
+        println(repr(i));
+    }
+};
+
+fizzbuzz(20);
