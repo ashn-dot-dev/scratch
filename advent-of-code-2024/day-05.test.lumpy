@@ -1,0 +1,123 @@
+let input = fs::read("day-05.input").trim().split("\n\n");
+#let input = ```
+#47|53
+#97|13
+#97|61
+#97|47
+#75|29
+#61|13
+#75|53
+#29|13
+#97|29
+#53|29
+#61|53
+#97|53
+#61|29
+#47|13
+#75|47
+#97|75
+#47|61
+#75|61
+#47|29
+#75|13
+#53|13
+#
+#75,47,61,53,29
+#97,61,53,29,13
+#75,29,13
+#75,97,47,61,53
+#61,13,29
+#97,13,75,29,47
+#```.trim().split("\n\n");
+
+
+let re = import("re");
+
+let ordering = input[0].trim().split("\n");
+# Rules element `Z: [A]` implies Z depends on A.
+# Rules element `Z: [A, B]` implies Z depends on A and B.
+# A, B, C, etc. must come before Z in the update list for Z to be satisfied.
+let rules = map{};
+for text in ordering {
+    let match = re::match(`(\d+)\|(\d+)`, text);
+    let depends = match.group(1);
+    let z = match.group(2);
+    if not rules.contains(z) {
+        rules[z] = [];
+    }
+    rules[z].push(depends);
+}
+
+let updates = [];
+for text in input[1].trim().split("\n") {
+    updates.push(text.split(","));
+}
+
+let is_correct = function(update) {
+    for i in update.count() {
+        let page = update[i];
+        if not rules.contains(page) {
+            # No rules assocaited with the page.
+            continue;
+        }
+
+        for dependency in rules[page] {
+            if update.contains(dependency) and not update.slice(0, i).contains(dependency) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+};
+
+let middle = function(update) {
+    return number(update[(update.count() / 2).floor()]);
+};
+
+let part1 = 0;
+let incorrect = [];
+for update in updates {
+    if not is_correct(update) {
+        incorrect.push(update);
+        continue;
+    }
+    part1 = part1 + middle(update);
+}
+println("PART 1: " + repr(part1));
+
+let fix = function(incorrect) {
+    let corrected = [];
+
+    let visit = function(page) {
+        if rules.contains(page) {
+            for dependency in rules[page] {
+                while true {
+                    let found = incorrect.find(dependency);
+                    if found == null {
+                        break;
+                    }
+                    visit(incorrect.remove(found));
+                }
+            }
+        }
+
+        corrected.push(page);
+    };
+
+    while incorrect.count() != 0 {
+        visit(incorrect.remove(0));
+    }
+
+    return corrected;
+};
+
+let part2 = 0;
+for update in incorrect {
+    let corrected = fix(update);
+    part2 = part2 + middle(corrected);
+}
+println("PART 2: " + repr(part2));
+################################################################################
+# PART 1: 5452
+# PART 2: 4598
