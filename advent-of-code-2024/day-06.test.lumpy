@@ -1,0 +1,111 @@
+let input = fs::read("day-06.input").trim();
+#let input = ```
+#....#.....
+#.........#
+#..........
+#..#.......
+#.......#..
+#..........
+#.#..^.....
+#........#.
+##.........
+#......#...
+#```.trim();
+
+let grid = [];
+for row in input.split("\n") {
+    grid.push(row.split(""));
+}
+
+let y_min = 0;
+let y_max = grid.count() - 1;
+let x_min = 0;
+let x_max = grid[0].count() - 1;
+
+let U = {"x": +0, "y": -1};
+let D = {"x": +0, "y": +1};
+let L = {"x": -1, "y": +0};
+let R = {"x": +1, "y": +0};
+
+let pos = null;
+let vel = null;
+for y in grid.count() {
+    if pos != null and vel != null {
+        break;
+    }
+
+    for x in grid[y].count() {
+        if grid[y][x] == "^" {
+            pos = {"x": x, "y": y};
+            vel = U;
+            break;
+        }
+        if grid[y][x] == "v" {
+            pos = {"x": x, "y": y};
+            vel = D;
+            break;
+        }
+        if grid[y][x] == "<" {
+            pos = {"x": x, "y": y};
+            vel = L;
+            break;
+        }
+        if grid[y][x] == ">" {
+            pos = {"x": x, "y": y};
+            vel = R;
+            break;
+        }
+    }
+}
+
+let display = function() {
+    let text = "";
+    for row in grid {
+        text = text + "".join(row) + "\n";
+    }
+    fs::write("/dev/stderr", "\x1b[2J" + text);
+    #println("\x1b[2J" + text);
+};
+
+while true {
+    grid[pos::y][pos::x] = "X"; # mark position as visited
+    #display();
+
+    let next = {"x": pos::x + vel::x, "y": pos::y + vel::y};
+    if next::x < x_min or next::x > x_max or next::y < y_min or next::y > y_max {
+        break;
+    }
+
+    if grid[next::y][next::x] == "#" {
+        if vel == U {
+            vel = R;
+            continue;
+        }
+        if vel == R {
+            vel = D;
+            continue;
+        }
+        if vel == D {
+            vel = L;
+            continue;
+        }
+        if vel == L {
+            vel = U;
+            continue;
+        }
+    }
+
+    pos = next;
+}
+
+let part1 = 0;
+for y in grid.count() {
+    for x in grid[y].count() {
+        if grid[y][x] == "X" {
+            part1 = part1 + 1;
+        }
+    }
+}
+println("PART 1: " + repr(part1));
+################################################################################
+# PART 1: 4778
